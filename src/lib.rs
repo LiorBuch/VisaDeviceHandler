@@ -8,7 +8,7 @@ mod find_scope;
 mod tests {
 
     use super::*;
-
+    //tests to find the scope using the scope address.
     #[test]
     fn it_works_ni() {
         let result = find_scope::test_ni_visa();
@@ -29,6 +29,7 @@ mod tests {
         let result = find_scope::test_ni_so();
         assert_eq!(result, 0);
     }
+    //tests to find the first USB instrument.
     #[test]
     fn it_works_first_default() {
         let result = find_first::test_ni_default_find_first();
