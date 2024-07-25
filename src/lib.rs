@@ -1,13 +1,36 @@
-use std::ffi::CString;
-
-use visa::{self};
-
 mod find_first;
 mod find_scope;
+mod visa_module;
+mod types;
 #[cfg(test)]
 mod tests {
 
+    use visa_module::SafeDeviceMap;
+
     use super::*;
+
+    #[test]
+    fn test_mapper(){
+        let mapper_res = SafeDeviceMap::init(None);
+        match mapper_res {
+            Ok(mapper) => {
+                let stat = mapper.get_all_devices();
+                match stat {
+                    Ok(_) => {assert_eq!(1,1)},
+                    Err(e) => {
+                        println!("got error: {}",e);
+                        assert_eq!(1,-1);
+                    }
+                    
+                }
+            },
+            Err(e) => {
+                println!("got error of {}",e);
+                assert_eq!(1,-1);
+            }
+        }
+    }
+
     //tests to find the scope using the scope address.
     #[test]
     fn it_works_ni() {
