@@ -10,6 +10,34 @@ use visa::Wrapper;
 
 use crate::types::Device;
 
+/// The `SafeDeviceMap` provides a lock safe way to store The resource manager and all the sessions in one place.  
+/// SafeDeviceMap uses Arc and Mutex wrapped around rm and map to provide a safe way to interact with them.
+///
+/// # Params
+/// @lib -> The main visa library, its just to create all kind of calls.  
+/// @rm -> [`u32`] session number, will hold the sessions and open new ones.  
+/// @map -> [`HashMap<String,Device>`] instance, stores all the instruments by thier device name (Human readable string).
+///
+/// #Panic
+/// As the program panics, the rm will be droped so the connections should be freed as well.  
+/// But just to be safe allways call [`SafeDeviceMap::disconnect_device`] or [`SafeDeviceMap::clear_map`] when finished.  
+/// I will try too look more into it and update it in the future.
+///
+/// # Examples
+/// ```
+/// let sdm_result:SafeDeviceMap = SafeDeviceMap::init(None);
+/// match sdm_result {
+///     Ok(mapper) => {
+///         mapper.connect_device("address_01".to_string());
+///         let data = mapper.query_from_device("name_01".to_string(),"cool funcation with args").unwrap();
+///         println!("got {} from the device",data);
+///         mapper.disconnect_device("name_01".to_string());
+///     }
+///     Err(e) => {/*print codes or anything */}
+/// }
+/// ```
+///
+/// To get a SafeDeviceMap call [`SafeDeviceMap::init()`].
 pub struct SafeDeviceMap {
     lib: Arc<Mutex<Container<Wrapper>>>,
     rm: Arc<Mutex<u32>>,
@@ -23,6 +51,10 @@ impl Drop for SafeDeviceMap {
     }
 }
 impl SafeDeviceMap {
+    ///Call this to get the SafeDeviceMap.  
+    ///It will generate a DefaultRM ,create a new HasMap and save the library instance.
+    ///
+    ///This Method **MUST** be called.
     pub fn init(file_path: Option<&str>) -> Result<SafeDeviceMap, String> {
         let os = env::consts::OS;
         let visa: Container<Wrapper>;
@@ -51,6 +83,12 @@ impl SafeDeviceMap {
         };
         Ok(safe)
     }
+    ///Call this to insert a new device to the HashMap.
+    ///
+    ///@address -> type [`String`], the address of the device you wish to add to the map.  
+    ///*Before a device is entered to the map it will open a connection too.*
+    ///
+    ///Returns -> error [`String`] if failed to insert or void if success.
     pub fn connect_device(&self, address: String) -> Result<(), String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
         let rm = self.rm.lock().map_err(|e| e.to_string())?;
@@ -93,19 +131,32 @@ impl SafeDeviceMap {
         map.insert(response.to_string(), device);
         Ok(())
     }
+    ///Call this to remove a device from the map.
+    ///Note, the removed device data will be returned.
+    ///
+    ///@name -> Device name to get removed.
+    ///
+    ///Return -> The removed [`Device`] on success or error string on fail.
     pub fn disconnect_device(&self, name: String) -> Result<Device, String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
         let mut map = self.map.lock().map_err(|e| e.to_string())?;
 
         let remove_result = map.remove(&name);
         match remove_result {
-            Some(device) => {
+            Some(mut device) => {
                 lib.viClose(device.session);
+                device.session = 0;
                 Ok(device)
             }
             None => Err("no device was found!".to_string()),
         }
     }
+    ///Call this to write message to the device.
+    ///
+    ///@name -> Device name send the message to.  
+    ///@msg -> The message to send, a concated [`str`] of function name and its args.
+    ///
+    ///Returns -> Void on success string if error.
     pub fn write_to_device(&self, name: String, msg: &str) -> Result<(), String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
         let map = self.map.lock().map_err(|e| e.to_string())?;
@@ -127,6 +178,12 @@ impl SafeDeviceMap {
             None => Err("device not exist!".to_string()),
         }
     }
+    ///Call this to read message from the device buffer.  
+    ///Note, the buffer will be cleared after a read!
+    ///
+    ///@name -> Device name you wish to read its buffer.
+    ///
+    ///Returns -> The read string if success error string if failed.
     pub fn read_from_device(&self, name: String) -> Result<String, String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
         let map = self.map.lock().map_err(|e| e.to_string())?;
@@ -145,6 +202,14 @@ impl SafeDeviceMap {
             None => Err("device not exist!".to_string()),
         }
     }
+    ///Call this to write and read message from the device buffer.  
+    ///Note! the buffer will be cleared after a read!  
+    ///*This calls behaves like write and then read.*
+    ///
+    ///@name -> Device name to interact with.  
+    ///@msg -> Message to send to the device (the write message).
+    ///
+    ///Returns -> The read string if success error string if failed.
     pub fn query_from_device(&self, name: String, msg: &str) -> Result<String, String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
         let map = self.map.lock().map_err(|e| e.to_string())?;
@@ -170,6 +235,9 @@ impl SafeDeviceMap {
             None => Err("device not exist!".to_string()),
         }
     }
+    ///This function will find the first device the rm can finds.
+    ///
+    ///Returns -> The first [`Device`].
     pub fn get_first_device(&self) -> Result<(), String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
         let rm = self.rm.lock().map_err(|e| e.to_string())?;
@@ -214,7 +282,10 @@ impl SafeDeviceMap {
         println!("rm session: {}", rm);
         Ok(())
     }
-    pub fn get_all_devices(&self) -> Result<(), String> {
+    ///This function will find all the devices connected with USB to the PC.
+    ///
+    ///Returns -> A [`Vec`] of [`Device`] with USB connections.
+    pub fn find_all_devices(&self) -> Result<Vec<Device>, String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
         let rm = self.rm.lock().map_err(|e| e.to_string())?;
 
@@ -230,6 +301,7 @@ impl SafeDeviceMap {
             &mut ret_cnt,
             des.as_mut_ptr() as *mut i8,
         );
+        let mut devices: Vec<Device> = Vec::new();
         for i in 0..ret_cnt {
             lib.viFindNext(device_session, des.as_mut_ptr() as *mut i8);
             status = lib.viOpen(
@@ -260,12 +332,25 @@ impl SafeDeviceMap {
             println!("device session: {}", device.session);
             println!("rm session: {}", rm);
             println!("<-----------------------> \n");
+            devices.push(device);
         }
+        Ok(devices)
+    }
+    ///This function clears the mapping of the devices.  
+    ///It will close **all** the connections and **drop** all the Devices.
+    pub fn clear_map(&self) -> Result<(), String> {
+        let lib = self.lib.lock().map_err(|e| e.to_string())?;
+        let mut map = self.map.lock().map_err(|e| e.to_string())?;
+        for value in map.values() {
+            lib.viClear(value.session);
+            lib.viClose(value.session);
+        }
+        map.clear();
         Ok(())
     }
-    pub fn clear_map() {
-        unimplemented!()
-    }
+    ///This function returns to the user all the active [`Device`] that the [`SafeDeviceMap`] have access to.
+    ///
+    ///Returns -> A [`Vec`] of [`Device`] currently in use.
     pub fn get_all_mapped_devices(&self) -> Result<Vec<Device>, String> {
         let map = self.map.lock().map_err(|e| e.to_string())?;
         let mut devices: Vec<Device> = Vec::new();
