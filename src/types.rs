@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Serialize)]
+#[derive(Serialize,Clone)]
 pub struct Device {
     pub name: String,
     pub address: String,

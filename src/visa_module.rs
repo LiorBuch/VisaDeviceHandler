@@ -108,7 +108,6 @@ impl SafeDeviceMap {
     }
     pub fn write_to_device(&self, name: String, msg: &str) -> Result<(), String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
-        let rm = self.rm.lock().map_err(|e| e.to_string())?;
         let map = self.map.lock().map_err(|e| e.to_string())?;
 
         let device_session_option = map.get(&name);
@@ -117,16 +116,19 @@ impl SafeDeviceMap {
                 let mut device_session = device.session;
                 let cmd: &[u8] = msg.as_bytes();
                 let mut ret_cnt = 0u32;
-                let status = lib.viWrite(device_session, cmd.as_ptr(), u32::try_from(cmd.len()).unwrap(), &mut ret_cnt);
+                let status = lib.viWrite(
+                    device_session,
+                    cmd.as_ptr(),
+                    u32::try_from(cmd.len()).unwrap(),
+                    &mut ret_cnt,
+                );
                 Ok(())
             }
             None => Err("device not exist!".to_string()),
         }
-
     }
-    pub fn read_from_device(&self,name:String) -> Result<String, String> {
+    pub fn read_from_device(&self, name: String) -> Result<String, String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
-        let rm = self.rm.lock().map_err(|e| e.to_string())?;
         let map = self.map.lock().map_err(|e| e.to_string())?;
 
         let device_session_option = map.get(&name);
@@ -136,15 +138,15 @@ impl SafeDeviceMap {
                 let mut ret_cnt = 0u32;
                 let resp = vec![0u8; 50];
                 let status = lib.viRead(device_session, resp.as_ptr() as *mut _, 50, &mut ret_cnt);
-                let response = std::str::from_utf8(&resp[0..ret_cnt as usize]).map_err(|_| "error, cannot parse response")?;
+                let response = std::str::from_utf8(&resp[0..ret_cnt as usize])
+                    .map_err(|_| "error, cannot parse response")?;
                 Ok(response.to_string())
             }
             None => Err("device not exist!".to_string()),
         }
     }
-    pub fn query_from_device(&self, name: String, msg: &str) -> Result<String, String>{
+    pub fn query_from_device(&self, name: String, msg: &str) -> Result<String, String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
-        let rm = self.rm.lock().map_err(|e| e.to_string())?;
         let map = self.map.lock().map_err(|e| e.to_string())?;
 
         let device_session_option = map.get(&name);
@@ -153,10 +155,16 @@ impl SafeDeviceMap {
                 let device_session = device.session;
                 let cmd: &[u8] = msg.as_bytes();
                 let mut ret_cnt = 0u32;
-                let mut status = lib.viWrite(device_session, cmd.as_ptr(), u32::try_from(cmd.len()).unwrap(), &mut ret_cnt);
+                let mut status = lib.viWrite(
+                    device_session,
+                    cmd.as_ptr(),
+                    u32::try_from(cmd.len()).unwrap(),
+                    &mut ret_cnt,
+                );
                 let resp = vec![0u8; 50];
                 status = lib.viRead(device_session, resp.as_ptr() as *mut _, 50, &mut ret_cnt);
-                let response = std::str::from_utf8(&resp[0..ret_cnt as usize]).map_err(|_| "error, cannot parse response")?;
+                let response = std::str::from_utf8(&resp[0..ret_cnt as usize])
+                    .map_err(|_| "error, cannot parse response")?;
                 Ok(response.to_string())
             }
             None => Err("device not exist!".to_string()),
@@ -246,18 +254,29 @@ impl SafeDeviceMap {
                 name: response.to_string(),
                 session: device_session,
             };
+            println!("<---- Device No:{i} ---->");
             println!("device name: {}", device.name);
             println!("device address: {}", device.address);
             println!("device session: {}", device.session);
             println!("rm session: {}", rm);
-            println!("*************");
+            println!("<-----------------------> \n");
         }
         Ok(())
     }
     pub fn clear_map() {
         unimplemented!()
     }
-    pub fn get_all_mapped_devices() {
-        unimplemented!()
+    pub fn get_all_mapped_devices(&self) -> Result<Vec<Device>, String> {
+        let map = self.map.lock().map_err(|e| e.to_string())?;
+        let mut devices: Vec<Device> = Vec::new();
+        for value in map.values() {
+            let dev = Device {
+                address: value.address.to_string(),
+                name: value.name.to_string(),
+                session: value.session,
+            };
+            devices.push(dev);
+        }
+        Ok(devices)
     }
 }
