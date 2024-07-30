@@ -1,7 +1,7 @@
 mod find_first;
 mod find_scope;
-mod visa_module;
-mod types;
+pub mod visa_module;
+pub mod types;
 #[cfg(test)]
 mod tests {
 
