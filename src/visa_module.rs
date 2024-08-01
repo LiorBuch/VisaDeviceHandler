@@ -238,7 +238,7 @@ impl SafeDeviceMap {
     ///This function will find the first device the rm can finds.
     ///
     ///Returns -> The first [`Device`].
-    pub fn get_first_device(&self) -> Result<(), String> {
+    pub fn get_first_device(&self,debug:bool) -> Result<(), String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
         let rm = self.rm.lock().map_err(|e| e.to_string())?;
 
@@ -276,16 +276,18 @@ impl SafeDeviceMap {
             name: response.to_string(),
             session: device_session,
         };
-        println!("device name: {}", device.name);
-        println!("device address: {}", device.address);
-        println!("device session: {}", device.session);
-        println!("rm session: {}", rm);
+        if(debug){
+            println!("device name: {}", device.name);
+            println!("device address: {}", device.address);
+            println!("device session: {}", device.session);
+            println!("rm session: {}", rm);
+        }
         Ok(())
     }
     ///This function will find all the devices connected with USB to the PC.
     ///
     ///Returns -> A [`Vec`] of [`Device`] with USB connections.
-    pub fn find_all_devices(&self) -> Result<Vec<Device>, String> {
+    pub fn find_all_devices(&self,debug:bool) -> Result<Vec<Device>, String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
         let rm = self.rm.lock().map_err(|e| e.to_string())?;
 
@@ -303,7 +305,6 @@ impl SafeDeviceMap {
         );
         let mut devices: Vec<Device> = Vec::new();
         for i in 0..ret_cnt {
-            lib.viFindNext(device_session, des.as_mut_ptr() as *mut i8);
             status = lib.viOpen(
                 rm.clone(),
                 des.as_ptr() as *mut i8,
@@ -326,13 +327,16 @@ impl SafeDeviceMap {
                 name: response.to_string(),
                 session: device_session,
             };
-            println!("<---- Device No:{i} ---->");
-            println!("device name: {}", device.name);
-            println!("device address: {}", device.address);
-            println!("device session: {}", device.session);
-            println!("rm session: {}", rm);
-            println!("<-----------------------> \n");
+            if(debug){
+                println!("<---- Device No:{i} ---->");
+                println!("device name: {}", device.name);
+                println!("device address: {}", device.address);
+                println!("device session: {}", device.session);
+                println!("rm session: {}", rm);
+                println!("<-----------------------> \n");
+            }
             devices.push(device);
+            lib.viFindNext(device_session, des.as_mut_ptr() as *mut i8);
         }
         Ok(devices)
     }

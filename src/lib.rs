@@ -14,7 +14,7 @@ mod tests {
         let mapper_res = SafeDeviceMap::init(None);
         match mapper_res {
             Ok(mapper) => {
-                let stat = mapper.find_all_devices();
+                let stat = mapper.find_all_devices(true);
                 match stat {
                     Ok(_) => {
                         assert_eq!(1, 1)
