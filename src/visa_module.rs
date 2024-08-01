@@ -98,7 +98,7 @@ impl SafeDeviceMap {
         let mut ret_cnt = 0u32;
         let mut des = [0u8; 256];
         let mut device_session: u32 = 0;
-        let c_address = CString::new(address).unwrap();
+        let c_address = CString::new(address.trim_end_matches('\0').as_bytes()).map_err(|_| "CString Addrees conversion error".to_string())?;
         let mut status = lib.viFindRsrc(
             rm.clone(),
             c_address.as_ptr(),
@@ -116,12 +116,12 @@ impl SafeDeviceMap {
         status = lib.viWrite(
             device_session,
             cmd.as_ptr(),
-            u32::try_from(cmd.len()).unwrap(),
+            u32::try_from(cmd.len()).map_err(|_| "u32 conversion error".to_string())?,
             &mut ret_cnt,
         );
         let resp = vec![0u8; 50];
         status = lib.viRead(device_session, resp.as_ptr() as *mut _, 50, &mut ret_cnt);
-        let response = std::str::from_utf8(&resp[0..ret_cnt as usize]).unwrap();
+        let response = std::str::from_utf8(&resp[0..ret_cnt as usize]).map_err(|_| "response parse error".to_string())?;
 
         let device = Device {
             address: String::from_utf8_lossy(&des).to_string(),
@@ -170,7 +170,7 @@ impl SafeDeviceMap {
                 let status = lib.viWrite(
                     device_session,
                     cmd.as_ptr(),
-                    u32::try_from(cmd.len()).unwrap(),
+                    u32::try_from(cmd.len()).map_err(|_| "u32 conversion error".to_string())?,
                     &mut ret_cnt,
                 );
                 Ok(())
@@ -223,7 +223,7 @@ impl SafeDeviceMap {
                 let mut status = lib.viWrite(
                     device_session,
                     cmd.as_ptr(),
-                    u32::try_from(cmd.len()).unwrap(),
+                    u32::try_from(cmd.len()).map_err(|_| "u32 conversion error".to_string())?,
                     &mut ret_cnt,
                 );
                 let resp = vec![0u8; 50];
@@ -240,7 +240,7 @@ impl SafeDeviceMap {
     ///@debug -> bool, if you wish to print the device info.
     /// 
     ///Returns -> The first [`Device`].
-    pub fn get_first_device(&self,debug:bool) -> Result<(), String> {
+    pub fn get_first_device(&self,debug:bool) -> Result<Device, String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
         let rm = self.rm.lock().map_err(|e| e.to_string())?;
 
@@ -248,7 +248,7 @@ impl SafeDeviceMap {
         let mut ret_cnt = 0u32;
         let mut des = [0u8; 256];
         let mut device_session: u32 = 0;
-        let c_address = CString::new(format!("USB?*")).unwrap();
+        let c_address = CString::new(format!("USB?*")).map_err(|_| "CString Addrees conversion error".to_string())?;
         let mut status = lib.viFindRsrc(
             rm.clone(),
             c_address.as_ptr(),
@@ -266,12 +266,12 @@ impl SafeDeviceMap {
         status = lib.viWrite(
             device_session,
             cmd.as_ptr(),
-            u32::try_from(cmd.len()).unwrap(),
+            u32::try_from(cmd.len()).map_err(|_| "u32 conversion error".to_string())?,
             &mut ret_cnt,
         );
         let resp = vec![0u8; 50];
         status = lib.viRead(device_session, resp.as_ptr() as *mut _, 50, &mut ret_cnt);
-        let response = std::str::from_utf8(&resp[0..ret_cnt as usize]).unwrap();
+        let response = std::str::from_utf8(&resp[0..ret_cnt as usize]).map_err(|_| "response parse error".to_string())?;
 
         let device = Device {
             address: String::from_utf8_lossy(&des).to_string(),
@@ -284,7 +284,7 @@ impl SafeDeviceMap {
             println!("device session: {}", device.session);
             println!("rm session: {}", rm);
         }
-        Ok(())
+        Ok(device)
     }
     ///This function will find all the devices connected with USB to the PC.
     ///
@@ -299,7 +299,7 @@ impl SafeDeviceMap {
         let mut ret_cnt = 0u32;
         let mut des = [0u8; 256];
         let mut device_session: u32 = 0;
-        let c_address = CString::new(format!("USB?*")).unwrap();
+        let c_address = CString::new(format!("USB?*")).map_err(|_| "CString Adrees conversion error".to_string())?;
         let mut status = lib.viFindRsrc(
             rm.clone(),
             c_address.as_ptr(),
@@ -319,12 +319,12 @@ impl SafeDeviceMap {
             status = lib.viWrite(
                 device_session,
                 cmd.as_ptr(),
-                u32::try_from(cmd.len()).unwrap(),
+                u32::try_from(cmd.len()).map_err(|_| "u32 conversion error".to_string())?,
                 &mut ret_cnt,
             );
             let resp = vec![0u8; 50];
             status = lib.viRead(device_session, resp.as_ptr() as *mut _, 50, &mut ret_cnt);
-            let response = std::str::from_utf8(&resp[0..ret_cnt as usize]).unwrap();
+            let response = std::str::from_utf8(&resp[0..ret_cnt as usize]).map_err(|_| "response parse error".to_string())?;
 
             let device = Device {
                 address: String::from_utf8_lossy(&des).to_string(),

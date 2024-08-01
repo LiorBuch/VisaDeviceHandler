@@ -14,10 +14,27 @@ mod tests {
         let mapper_res = SafeDeviceMap::init(None);
         match mapper_res {
             Ok(mapper) => {
-                let stat = mapper.find_all_devices(true);
+                let stat = mapper.get_first_device(true);
                 match stat {
-                    Ok(_) => {
-                        assert_eq!(1, 1)
+                    Ok(dev) => {
+                        assert_eq!(1, 1);
+                        let con = mapper.connect_device(dev.address);
+                        if con.is_err() {
+                            println!("got error: con error");
+                            assert_eq!(1, -11);
+                        }
+                        let res = mapper.query_from_device(dev.name.clone(), "*IDN?\n");
+                        if res.is_ok() {
+                            println!("res got {}",res.unwrap());
+                        }
+                        let dis = mapper.disconnect_device(dev.name);
+                        match dis{
+                            Ok(_)=>{assert_eq!(1, 1);},
+                            Err(e) => {
+                                println!("got error: {}", e);
+                                assert_eq!(1, -10);
+                            }
+                        }
                     }
                     Err(e) => {
                         println!("got error: {}", e);

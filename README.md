@@ -21,3 +21,10 @@ match sdm_result {
     Err(e) => {/*print codes or anything */}
 }
 ```
+
+## Change Log 0.2.0 -> 0.3.0
+
+- `get_first_device` now returns the device instead of printing.
+- `get_first_device` and `find_all_devices` now wont print unless `debug` boolean is true.
+- Fixed the error where the CString parsess null terminators.
+- Added key error map in some functions.
