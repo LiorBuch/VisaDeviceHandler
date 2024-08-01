@@ -237,6 +237,8 @@ impl SafeDeviceMap {
     }
     ///This function will find the first device the rm can finds.
     ///
+    ///@debug -> bool, if you wish to print the device info.
+    /// 
     ///Returns -> The first [`Device`].
     pub fn get_first_device(&self,debug:bool) -> Result<(), String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
@@ -276,7 +278,7 @@ impl SafeDeviceMap {
             name: response.to_string(),
             session: device_session,
         };
-        if(debug){
+        if debug{
             println!("device name: {}", device.name);
             println!("device address: {}", device.address);
             println!("device session: {}", device.session);
@@ -286,6 +288,8 @@ impl SafeDeviceMap {
     }
     ///This function will find all the devices connected with USB to the PC.
     ///
+    ///@debug -> bool, if you wish to print the device info.
+    /// 
     ///Returns -> A [`Vec`] of [`Device`] with USB connections.
     pub fn find_all_devices(&self,debug:bool) -> Result<Vec<Device>, String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
@@ -327,7 +331,7 @@ impl SafeDeviceMap {
                 name: response.to_string(),
                 session: device_session,
             };
-            if(debug){
+            if debug{
                 println!("<---- Device No:{i} ---->");
                 println!("device name: {}", device.name);
                 println!("device address: {}", device.address);
