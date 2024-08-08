@@ -8,12 +8,6 @@ The crate supports Windows, Linux and MacOS. but is being tested mainly on Windo
 
 ## Example
 
-## Tauri
-
-The next Tauri project utilizes the crate as a peripheral for NI-VISA.
-https://github.com/LiorBuch/showcaser.
-this project uses React and Mantine as the UI, it's not failproof as it's just a POC.
-
 ```rust
 
 let sdm_result:SafeDeviceMap = SafeDeviceMap::init(None);
@@ -27,6 +21,12 @@ match sdm_result {
     Err(e) => {/*print codes or anything */}
 }
 ```
+## Tauri
+
+The next Tauri project utilizes the crate as a peripheral for NI-VISA.
+https://github.com/LiorBuch/showcaser.
+this project uses React and Mantine as the UI, it's not failproof as it's just a POC.
+
 
 ## Change Log 0.2.0 -> 0.3.0
 
