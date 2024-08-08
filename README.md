@@ -36,4 +36,5 @@ match sdm_result {
 ## Change Log 0.3.0 -> 0.3.1
 
 - Opened project as open source.
-- Added Tauri example project
+- Added Tauri example project.
+- added filter keywords for `get_first_device` and `find_all_devices`
