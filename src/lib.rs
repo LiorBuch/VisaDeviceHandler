@@ -5,7 +5,6 @@ pub mod visa_module;
 mod tests {
 
     use visa_module::SafeDeviceMap;
-
     use super::*;
 
     ///General test to see if the SafeDeviceMap works.
