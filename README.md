@@ -8,6 +8,10 @@ The crate supports Windows, MacOS and Linux. but is being tested mainly on windo
 
 ## Example
 
+## Tauri
+
+The next tauri project 
+
 ```rust
 
 let sdm_result:SafeDeviceMap = SafeDeviceMap::init(None);
@@ -28,3 +32,8 @@ match sdm_result {
 - `get_first_device` and `find_all_devices` now wont print unless `debug` boolean is true.
 - Fixed the error where the CString parsess null terminators.
 - Added key error map in some functions.
+
+## Change Log 0.3.0 -> 0.3.1
+
+- Opened project as open source.
+- Added Tauri example project

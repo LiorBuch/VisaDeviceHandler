@@ -236,11 +236,12 @@ impl SafeDeviceMap {
         }
     }
     ///This function will find the first device the rm can finds.
-    ///
+    /// 
+    ///@filter -> &str, choose the filter keyword for NI-VISA to look for the devices,None defaults to "USB?*".  
     ///@debug -> bool, if you wish to print the device info.
     /// 
     ///Returns -> The first [`Device`].
-    pub fn get_first_device(&self,debug:bool) -> Result<Device, String> {
+    pub fn get_first_device(&self,filter:Option<&str>,debug:bool) -> Result<Device, String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
         let rm = self.rm.lock().map_err(|e| e.to_string())?;
 
@@ -248,7 +249,7 @@ impl SafeDeviceMap {
         let mut ret_cnt = 0u32;
         let mut des = [0u8; 256];
         let mut device_session: u32 = 0;
-        let c_address = CString::new(format!("USB?*")).map_err(|_| "CString Addrees conversion error".to_string())?;
+        let c_address = CString::new(filter.unwrap_or("USB?*")).map_err(|_| "CString Addrees conversion error".to_string())?;
         let mut status = lib.viFindRsrc(
             rm.clone(),
             c_address.as_ptr(),
@@ -288,10 +289,11 @@ impl SafeDeviceMap {
     }
     ///This function will find all the devices connected with USB to the PC.
     ///
+    ///@filter -> &str, choose the filter keyword for NI-VISA to look for the devices,None defaults to "USB?*".  
     ///@debug -> bool, if you wish to print the device info.
-    /// 
+    ///
     ///Returns -> A [`Vec`] of [`Device`] with USB connections.
-    pub fn find_all_devices(&self,debug:bool) -> Result<Vec<Device>, String> {
+    pub fn find_all_devices(&self,filter:Option<&str>,debug:bool) -> Result<Vec<Device>, String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
         let rm = self.rm.lock().map_err(|e| e.to_string())?;
 
@@ -299,7 +301,7 @@ impl SafeDeviceMap {
         let mut ret_cnt = 0u32;
         let mut des = [0u8; 256];
         let mut device_session: u32 = 0;
-        let c_address = CString::new(format!("USB?*")).map_err(|_| "CString Adrees conversion error".to_string())?;
+        let c_address = CString::new(filter.unwrap_or("USB?*")).map_err(|_| "CString Adrees conversion error".to_string())?;
         let mut status = lib.viFindRsrc(
             rm.clone(),
             c_address.as_ptr(),
