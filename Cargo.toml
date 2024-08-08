@@ -1,6 +1,6 @@
 [package]
 name = "visa-device-handler"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 authors = ["LiorBuch"]
 description = "a crate to handle NI-VISA connections and simplify its use."
@@ -8,6 +8,7 @@ license = "MIT"
 repository = "https://github.com/LiorBuch/VisaDeviceHandler"
 license-file= "LICENSE.txt"
 readme = "README.md"
+keywords = ["dll","so","visa","ni-visa"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
