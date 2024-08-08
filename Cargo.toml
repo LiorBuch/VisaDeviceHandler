@@ -1,6 +1,6 @@
 [package]
 name = "visa-device-handler"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2021"
 authors = ["LiorBuch"]
 description = "a crate to handle NI-VISA connections and simplify its use."
