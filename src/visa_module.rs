@@ -6,7 +6,7 @@ use std::{
 };
 
 use dlopen::wrapper::Container;
-use visa::Wrapper;
+use visa::{ViStatus, Wrapper, VI_SUCCESS, VI_WARN_CONFIG_NLOADED};
 
 use crate::types::Device;
 
@@ -52,7 +52,7 @@ impl Drop for SafeDeviceMap {
 }
 impl SafeDeviceMap {
     ///Call this to get the SafeDeviceMap.  
-    ///It will generate a DefaultRM ,create a new HasMap and save the library instance.
+    ///It will generate a DefaultRM ,create a new HashMap and save the library instance.
     ///
     ///This Method **MUST** be called.
     pub fn init(file_path: Option<&str>) -> Result<SafeDeviceMap, String> {
@@ -73,9 +73,6 @@ impl SafeDeviceMap {
         }
         let mut rm_session = 0;
         let status = visa.viOpenDefaultRM(&mut rm_session);
-        if status != 0 {
-            return Err("unable to open RM!".to_string());
-        }
         let safe = SafeDeviceMap {
             lib: Arc::new(Mutex::new(visa)),
             rm: Arc::new(Mutex::new(rm_session)),
@@ -121,7 +118,7 @@ impl SafeDeviceMap {
         );
         let resp = vec![0u8; 50];
         status = lib.viRead(device_session, resp.as_ptr() as *mut _, 50, &mut ret_cnt);
-        let response = std::str::from_utf8(&resp[0..ret_cnt as usize]).map_err(|_| "response parse error".to_string())?;
+        let response = std::str::from_utf8(&resp[0..ret_cnt as usize]).map_err(|_| "Response parse error".to_string())?;
 
         let device = Device {
             address: String::from_utf8_lossy(&des).to_string(),
@@ -144,11 +141,16 @@ impl SafeDeviceMap {
         let remove_result = map.remove(&name);
         match remove_result {
             Some(mut device) => {
-                lib.viClose(device.session);
-                device.session = 0;
-                Ok(device)
+                let status:ViStatus;
+                status = lib.viClose(device.session);
+                if status as u32 == VI_SUCCESS{
+                    device.session = 0;
+                    Ok(device)
+                } else {
+                    Err(format!("Cant close device with vicode: {status}"))
+                }
             }
-            None => Err("no device was found!".to_string()),
+            None => Err("No device was found!".to_string()),
         }
     }
     ///Call this to write message to the device.
@@ -164,7 +166,7 @@ impl SafeDeviceMap {
         let device_session_option = map.get(&name);
         match device_session_option {
             Some(device) => {
-                let mut device_session = device.session;
+                let device_session = device.session;
                 let cmd: &[u8] = msg.as_bytes();
                 let mut ret_cnt = 0u32;
                 let status = lib.viWrite(
