@@ -46,6 +46,8 @@ checksum = "97b3888a4aecf77e811145cadf6eef5901f4782c53886191b2f693f24761847c"
 [[package]]
 name = "mutex_logger"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "39cf8fe15ba073063f4c8edfc2c4bb762be0bb2d830754390fadf95c8bea9a10"
 
 [[package]]
 name = "proc-macro2"

@@ -1,4 +1,4 @@
-use mutex_logger::logger::{Logger,Verbosity};
+use mutex_logger::logger::{MLogger,Verbosity};
 use visa::{VI_ERROR_ALLOC, VI_ERROR_ASRL_FRAMING, VI_ERROR_ASRL_OVERRUN, VI_ERROR_ASRL_PARITY, VI_ERROR_BERR, VI_ERROR_CONN_LOST, VI_ERROR_INP_PROT_VIOL, VI_ERROR_INTF_NUM_NCONFIG, VI_ERROR_INV_ACC_MODE, VI_ERROR_INV_EXPR, VI_ERROR_INV_OBJECT, VI_ERROR_INV_RSRC_NAME, VI_ERROR_INV_SETUP, VI_ERROR_IO, VI_ERROR_LIBRARY_NFOUND, VI_ERROR_NCIC, VI_ERROR_NLISTENERS, VI_ERROR_NPERMISSION, VI_ERROR_NSUP_OPER, VI_ERROR_OUTP_PROT_VIOL, VI_ERROR_RAW_RD_PROT_VIOL, VI_ERROR_RAW_WR_PROT_VIOL, VI_ERROR_RSRC_BUSY, VI_ERROR_RSRC_LOCKED, VI_ERROR_RSRC_NFOUND, VI_ERROR_SYSTEM_ERROR, VI_ERROR_TMO, VI_SUCCESS, VI_SUCCESS_DEV_NPRESENT, VI_SUCCESS_MAX_CNT, VI_SUCCESS_TERM_CHAR, VI_WARN_CONFIG_NLOADED};
 
 pub fn test_open_rm_status(status: i32) -> Result<(), String> {
@@ -13,7 +13,7 @@ pub fn test_open_rm_status(status: i32) -> Result<(), String> {
     }
     Ok(())
 }
-pub fn test_write_status(status: i32,logger:&Logger) -> Result<(), String> {
+pub fn test_write_status(status: i32,logger:&MLogger) -> Result<(), String> {
     match status as u32 {
         VI_SUCCESS => return Ok(()),
         _ => return{
@@ -23,7 +23,7 @@ pub fn test_write_status(status: i32,logger:&Logger) -> Result<(), String> {
         },
     }
 }
-pub fn test_read_status(status: i32,logger:&Logger) -> Result<(), String> {
+pub fn test_read_status(status: i32,logger:&MLogger) -> Result<(), String> {
     match status as u32 {
         VI_SUCCESS => return Ok(()),
         VI_SUCCESS_TERM_CHAR => {
@@ -40,7 +40,7 @@ pub fn test_read_status(status: i32,logger:&Logger) -> Result<(), String> {
     }
     Ok(())
 }
-pub fn test_viopen_status(status: i32,logger:&Logger) -> Result<(), String> {
+pub fn test_viopen_status(status: i32,logger:&MLogger) -> Result<(), String> {
     match status as u32 {
         VI_SUCCESS => return Ok(()),
         VI_SUCCESS_DEV_NPRESENT => {
@@ -57,7 +57,7 @@ pub fn test_viopen_status(status: i32,logger:&Logger) -> Result<(), String> {
     }
     Ok(())
 }
-pub fn test_find_rsc_status(status: i32,logger:&Logger) -> Result<(), String> {
+pub fn test_find_rsc_status(status: i32,logger:&MLogger) -> Result<(), String> {
     match status as u32 {
         VI_SUCCESS => return Ok(()),
         _ => return{

@@ -41,6 +41,11 @@ this project uses React and Mantine as the UI, it's not failproof as it's just a
     - Added Tauri example project -> https://github.com/LiorBuch/showcaser
     - Added filter keywords for `get_first_device` and `find_all_devices`
 
+## Change Log 0.4.0
+
+- Fixed the disconnect issue.
+- Cleaned structure.
+
 ## Change Log 0.5.0
 
 - All Device operations now use its address, more uniform approch simce the address is always presented.

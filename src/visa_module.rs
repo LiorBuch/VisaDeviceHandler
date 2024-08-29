@@ -11,7 +11,7 @@ use crate::status_testers::{
 };
 use crate::types::Device;
 use dlopen::wrapper::Container;
-use mutex_logger::logger::Logger;
+use mutex_logger::logger::MLogger;
 use visa::{ViStatus, Wrapper, VI_SUCCESS};
 /// The `SafeDeviceMap` provides a lock safe way to store The resource manager and all the sessions in one place.  
 /// SafeDeviceMap uses Arc and Mutex wrapped around rm and map to provide a safe way to interact with them.
@@ -20,9 +20,10 @@ use visa::{ViStatus, Wrapper, VI_SUCCESS};
 /// @lib -> The main visa library, its just to create all kind of calls.  
 /// @rm -> [`u32`] session number, will hold the sessions and open new ones.  
 /// @map -> [`HashMap<String,Device>`] instance, stores all the instruments by thier device addresses.
-///
+/// @logger -> [`MLogger`] instance, stores all the logs, the field is public.   
+/// 
 /// #Panic
-/// As the program panics, the rm will be droped so the connections should be freed as well.  
+/// As the program panics, the rm will be droped so the connections will be freed as well.  
 ///
 /// # Examples
 /// ```
@@ -43,7 +44,7 @@ pub struct SafeDeviceMap {
     lib: Arc<Mutex<Container<Wrapper>>>,
     rm: Arc<Mutex<u32>>,
     map: Arc<Mutex<HashMap<String, Device>>>,
-    logger: Logger,
+    pub logger: MLogger,
 }
 impl Drop for SafeDeviceMap {
     fn drop(&mut self) {
@@ -84,7 +85,7 @@ impl SafeDeviceMap {
             lib: Arc::new(Mutex::new(visa)),
             rm: Arc::new(Mutex::new(rm_session)),
             map: Arc::new(Mutex::new(HashMap::new())),
-            logger: Logger::init_default(),
+            logger: MLogger::init_default(),
         };
         Ok(safe)
     }

@@ -16,4 +16,4 @@ visa = "=0.1.0"
 serde_json = "1.0.1"
 serde = { version = "1.0.202", features = ["derive"] }
 dlopen = "=0.1.8"
-mutex_logger = {path="C:\\Users\\liorb\\Documents\\TauriExample\\mutex_logger"}
+mutex_logger = "0.1.0"
