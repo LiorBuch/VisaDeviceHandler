@@ -48,7 +48,7 @@ this project uses React and Mantine as the UI, it's not failproof as it's just a
 
 ## Change Log 0.5.0
 
-- All Device operations now use its address, more uniform approch simce the address is always presented.
+- All Device operations now use its address, more uniform approch since the address is always presented.
 - Linux is now enabled, yet not fully tested.
-- Added logger to the Map to save all the warnings and suppress them. (set to silent by default)
+- Added logger to the Map to save all the warnings and suppress them. (set to Debug by default)
 - status codes are now fully tested to give more accurate information.
