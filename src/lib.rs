@@ -1,10 +1,9 @@
 mod find_first;
 pub mod types;
 pub mod visa_module;
+mod status_testers;
 #[cfg(test)]
 mod tests {
-    use core::time;
-
     use visa_module::SafeDeviceMap;
     use super::*;
 
@@ -18,16 +17,16 @@ mod tests {
                 match stat {
                     Ok(dev) => {
                         assert_eq!(1, 1);
-                        let con = mapper.connect_device(dev.address);
+                        let con = mapper.connect_device(dev.address.clone());
                         if con.is_err() {
                             println!("got error: con error");
                             assert_eq!(1, -11);
                         }
-                        let res = mapper.query_from_device(dev.name.clone(), "*IDN?\n");
+                        let res = mapper.query_from_device(dev.address.clone(), "*IDN?\n");
                         if res.is_ok() {
                             println!("res got {}",res.unwrap());
                         }
-                        let dis = mapper.disconnect_device(dev.name);
+                        let dis = mapper.disconnect_device(dev.address.clone());
                         match dis{
                             Ok(_)=>{assert_eq!(1, 1);},
                             Err(e) => {

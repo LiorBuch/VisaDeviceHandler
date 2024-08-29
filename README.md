@@ -4,7 +4,7 @@ Visa Device Handler
 Based on the visa crate, this crate aims to provide a wrapper to allow multiple device connections and handling,
 and make the usage of NI-VISA easier to use.
 
-The crate supports Windows, Linux and MacOS. but is being tested mainly on Windows and Linux so I cannot guarantee its behavior on Mac.
+The crate supports Windows, and sould support Linux and MacOS. but is being tested mainly on Windows.
 
 ## Example
 
@@ -28,15 +28,22 @@ https://github.com/LiorBuch/showcaser.
 this project uses React and Mantine as the UI, it's not failproof as it's just a POC.
 
 
-## Change Log 0.2.0 -> 0.3.0
+## Change Log 0.3.0
 
 - `get_first_device` now returns the device instead of printing.
 - `get_first_device` and `find_all_devices` now won't print unless `debug` boolean is true.
 - Fixed the error where the CString parses null terminators.
 - Added key error map in some functions.
 
-## Change Log 0.3.0 -> 0.3.1
+    ### Change Log 0.3.1
 
-- Opened project as open source.
-- Added Tauri example project -> https://github.com/LiorBuch/showcaser
-- added filter keywords for `get_first_device` and `find_all_devices`
+    - Opened project as open source.
+    - Added Tauri example project -> https://github.com/LiorBuch/showcaser
+    - Added filter keywords for `get_first_device` and `find_all_devices`
+
+## Change Log 0.5.0
+
+- All Device operations now use its address, more uniform approch simce the address is always presented.
+- Linux is now enabled, yet not fully tested.
+- Added logger to the Map to save all the warnings and suppress them. (set to silent by default)
+- status codes are now fully tested to give more accurate information.
