@@ -3,6 +3,7 @@ pub mod types;
 pub mod visa_module;
 #[cfg(test)]
 mod tests {
+    use core::time;
 
     use visa_module::SafeDeviceMap;
     use super::*;
