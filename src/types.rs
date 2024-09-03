@@ -6,3 +6,9 @@ pub struct Device {
     pub address: String,
     pub session:u32
 }
+
+pub enum MapError{
+    ReadError,
+    OpenError,
+    WriteError,
+}

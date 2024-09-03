@@ -27,6 +27,12 @@ The next Tauri project utilizes the crate as a peripheral for NI-VISA.
 https://github.com/LiorBuch/showcaser.
 this project uses React and Mantine as the UI, it's not failproof as it's just a POC.
 
+## Emulators
+
+The next project creates an emulator of a visa device to be used with a TCP connection.
+As the project is not mine, i cant help much with its usage.
+One issue i spotted is that read operations always timeout, probably a missing termination character.
+Link to the project: https://github.com/bluehands/Open-SCPI-Protocol-Emulator/tree/main
 
 ## Change Log 0.3.0
 
@@ -50,5 +56,9 @@ this project uses React and Mantine as the UI, it's not failproof as it's just a
 
 - All Device operations now use its address, more uniform approch since the address is always presented.
 - Linux is now enabled, yet not fully tested.
-- Added logger to the Map to save all the warnings and suppress them. (set to Debug by default)
+- Added logger to the Map to save all the warnings and suppress them. (set to Debug by default).
 - status codes are now fully tested to give more accurate information.
+
+    ### Change Log 0.5.2
+    - Fixed the problem where unable to use devices mapped since key include [`\0`] chars and address not.
+    - Validated usage of TCP deviecs and emulators.
