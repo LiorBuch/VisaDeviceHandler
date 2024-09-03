@@ -56,7 +56,7 @@ jobs:
     - name: Install NI Package Manager
       run: |
         # Install NI Package Manager silently
-        Start-Process -FilePath "${{ github.workspace }}\integration\installer.exe" -ArgumentList "install ni-visa --accept-eula --quiet --include-recommended --prevent-reboot --confirm" -Wait
+        Start-Process -FilePath "${{ github.workspace }}\integration\installer.exe" -ArgumentList "install ni-visa-runtime --accept-eula --quiet --include-recommended --prevent-reboot --confirm" -Wait
 
     
     - name: Copy visa64.dll to System32
@@ -74,7 +74,7 @@ jobs:
      # List all folders in System32 directory
     - name: List all folders in System32
       run: |
-        Get-ChildItem -Path C:\ -Directory | ForEach-Object { Write-Host $_.FullName }
+        Get-ChildItem -Path C:\Program Files -Directory | ForEach-Object { Write-Host $_.FullName }
 
 
     - name: Run core tests
