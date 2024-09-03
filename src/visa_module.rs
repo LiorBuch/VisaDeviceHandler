@@ -66,7 +66,7 @@ impl SafeDeviceMap {
         let map_config = config.unwrap_or(MapConfig::default());
         match os {
             "windows" => {
-                visa = visa::create(visa::Binary::NiVisa)
+                visa = visa::create(visa::Binary::Custom(file_path.unwrap().to_string()))
                     .map_err(|_| "error opening windows library file!".to_string())?;
             }
             "linux" => {

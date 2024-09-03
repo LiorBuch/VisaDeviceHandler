@@ -45,7 +45,7 @@ mod core_tests{
     }
     #[test]
     fn test_find_all() {
-        let mapper_res = SafeDeviceMap::init(None,None);
+        let mapper_res = SafeDeviceMap::init(Some("C:\\Windows\\System32\\visa64.dll"),None);
         match mapper_res {
             Ok(mapper) => {
                 let stat = mapper.find_all_devices(Some("?*USB"), true);
