@@ -30,11 +30,5 @@ jobs:
         # Install NI Package Manager silently
         Start-Process -FilePath "${{ github.workspace }}\integration\installer.exe" -ArgumentList "install ni-visa --accept-eula --quiet --include-recommended --prevent-reboot --confirm" -Wait
 
-    - name: Install NI-VISA via NI Package Manager
-      run: |
-        # Use NI Package Manager to install NI-VISA silently
-        # Note: Adjust command to include necessary flags for your installation
-        "C:\Program Files\National Instruments\NI Package Manager\nipkg.exe" install ni-visa --accept-eula --quiet --include-recommended --prevent-reboot --confirm
-
     - name: Run core tests
       run: cargo test --test core_tests
