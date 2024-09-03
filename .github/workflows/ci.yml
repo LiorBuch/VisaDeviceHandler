@@ -30,5 +30,11 @@ jobs:
         # Install NI Package Manager silently
         Start-Process -FilePath "${{ github.workspace }}\integration\installer.exe" -ArgumentList "install ni-visa --accept-eula --quiet --include-recommended --prevent-reboot --confirm" -Wait
 
+    - name: Configure Environment
+      run: |
+        # Set environment variables if needed
+        $env:Path += ";C:\Program Files (x86)\IVI Foundation\VISA\WinNT\Bin"
+        [System.Environment]::SetEnvironmentVariable('VISA_LIBRARY_PATH', 'C:\Program Files (x86)\IVI Foundation\VISA\WinNT\Bin')
+
     - name: Run core tests
       run: cargo test --test core_tests
