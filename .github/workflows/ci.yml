@@ -25,6 +25,34 @@ jobs:
         toolchain: stable
         override: true
     
+      # Cache Cargo registry
+    - name: Cache Cargo registry
+      uses: actions/cache@v2
+      with:
+        path: ~/.cargo/registry
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-registry-
+
+    # Cache Cargo index
+    - name: Cache Cargo index
+      uses: actions/cache@v2
+      with:
+        path: ~/.cargo/git
+        key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-index-
+
+    # Cache build artifacts in target directory
+    - name: Cache build artifacts
+      uses: actions/cache@v2
+      with:
+        path: target
+        key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-build-
+
+    
     - name: Install NI Package Manager
       run: |
         # Install NI Package Manager silently
@@ -35,6 +63,14 @@ jobs:
         # Set environment variables if needed
         $env:Path += ";C:\Program Files (x86)\IVI Foundation\VISA\WinNT\Bin"
         [System.Environment]::SetEnvironmentVariable('VISA_LIBRARY_PATH', 'C:\Program Files (x86)\IVI Foundation\VISA\WinNT\Bin')
+
+    - name: Check for visa64.dll in System32
+      run: |
+        if (Test-Path "C:\Windows\System32\visa64.dll") {
+          Write-Host "visa64.dll exists in System32 folder."
+        } else {
+          Write-Host "visa64.dll does NOT exist in System32 folder."
+        }
 
     - name: Run core tests
       run: cargo test --test core_tests
