@@ -74,7 +74,7 @@ jobs:
      # List all folders in System32 directory
     - name: List all folders in System32
       run: |
-        Get-ChildItem -Path C:\Program Files -Directory | ForEach-Object { Write-Host $_.FullName }
+        Get-ChildItem -Path C:\Program Files\ -Directory | ForEach-Object { Write-Host $_.FullName }
 
 
     - name: Run core tests
