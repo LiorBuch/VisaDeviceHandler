@@ -12,6 +12,7 @@ env:
 jobs:
   core_tests:
     runs-on: windows-latest
+    timeout-minutes: 3
 
     steps:
     - name: Check out code
@@ -27,7 +28,7 @@ jobs:
     - name: Install NI Package Manager
       run: |
         # Install NI Package Manager silently
-        Start-Process -FilePath "${{ github.workspace }}\integration\installer.exe" -ArgumentList "/qb /AcceptLicenses yes" -Wait
+        Start-Process -FilePath "installer.exe" -ArgumentList "install ni-visa --accept-eula --quiet --include-recommended --prevent-reboot --confirm" -Wait
 
     - name: Install NI-VISA via NI Package Manager
       run: |

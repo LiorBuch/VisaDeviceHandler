@@ -48,7 +48,7 @@ mod core_tests{
         let mapper_res = SafeDeviceMap::init(None,None);
         match mapper_res {
             Ok(mapper) => {
-                let stat = mapper.find_all_devices(Some("?*SOCKET"), true);
+                let stat = mapper.find_all_devices(Some("?*USB"), true);
                 match stat {
                     Ok(_) => assert_eq!(1, 1),
                     Err(_) => assert_eq!(1, -2),
