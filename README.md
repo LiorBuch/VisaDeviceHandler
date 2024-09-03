@@ -60,6 +60,7 @@ Link to the project: https://github.com/bluehands/Open-SCPI-Protocol-Emulator/tr
 - Added logger to the Map to save all the warnings and suppress them. (set to Debug by default).
 - status codes are now fully tested to give more accurate information.
 
-    ### Change Log 0.5.2
-    - Fixed the problem where unable to use devices mapped since key include [`\0`] chars and address not.
-    - Validated usage of TCP deviecs and emulators.
+## Change Log 0.6.0
+- Fixed the problem where unable to use devices mapped since key include [`\0`] chars and address not.
+- Validated usage of TCP deviecs and emulators.
+- Added the option to define if a program should terminate by the `Verbosity` of the error, as some error codes can be warnings. defaults to Error level.

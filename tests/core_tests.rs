@@ -45,10 +45,10 @@ mod core_tests{
     }
     #[test]
     fn test_find_all() {
-        let mapper_res = SafeDeviceMap::init(Some("C:\\Windows\\System32\\visa64.dll"),None);
+        let mapper_res = SafeDeviceMap::init(None,None);
         match mapper_res {
             Ok(mapper) => {
-                let stat = mapper.find_all_devices(Some("?*USB"), true);
+                let stat = mapper.find_all_devices(Some("?*SOCKET"), true);
                 match stat {
                     Ok(_) => assert_eq!(1, 1),
                     Err(_) => assert_eq!(1, -2),

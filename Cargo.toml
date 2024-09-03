@@ -1,10 +1,9 @@
 [package]
 name = "visa-device-handler"
-version = "0.5.2"
+version = "0.6.0"
 edition = "2021"
 authors = ["LiorBuch"]
 description = "a crate to handle NI-VISA connections and simplify its use."
-license = "MIT"
 repository = "https://github.com/LiorBuch/VisaDeviceHandler"
 license-file= "LICENSE.txt"
 readme = "README.md"
