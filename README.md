@@ -1,7 +1,6 @@
 Visa Device Handler
 ======
-[![CI](https://github.com/LiorBuch/VisaDeviceHandler/actions/workflows/ci.yml/badge.svg)](https://github.com/LiorBuch/VisaDeviceHandler/actions/workflows/ci.yml)
-======
+
 Based on the visa crate, this crate aims to provide a wrapper to allow multiple device connections and handling,
 and make the usage of NI-VISA easier to use.
 
