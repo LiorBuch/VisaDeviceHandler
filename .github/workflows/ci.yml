@@ -70,6 +70,12 @@ jobs:
         } else {
           Write-Host "visa64.dll does NOT exist in System32 folder."
         }
+    
+     # List all folders in System32 directory
+    - name: List all folders in System32
+      run: |
+        Get-ChildItem -Path C:\Windows\System32 -Directory | ForEach-Object { Write-Host $_.FullName }
+
 
     - name: Run core tests
       run: cargo test --test core_tests
