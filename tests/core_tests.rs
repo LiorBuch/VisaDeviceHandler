@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod core_tests{
+mod core_tests {
     use visa_device_handler::visa_module::SafeDeviceMap;
 
     ///General test to see if the SafeDeviceMap works.
@@ -65,45 +65,54 @@ mod core_tests{
         let mapper_res = SafeDeviceMap::default(None);
         match mapper_res {
             Ok(mapper) => {
-                let dev1 =
-                    mapper.connect_device("USB0::0x0957::0x5407::MY59002371::INSTR".to_string());
-                match dev1 {
-                    Ok(_) => assert_eq!(1, 1),
-                    Err(_) => assert_eq!(1, -1),
-                }
-                let dev2 =
-                    mapper.connect_device("USB0::0x0699::0x03C7::C023503::INSTR".to_string());
-                match dev2 {
-                    Ok(_) => assert_eq!(1, 1),
-                    Err(_) => assert_eq!(1, -2),
-                }
-                let quer_dev1 = mapper.query_from_device(
-                    "USB0::0x0957::0x5407::MY59002371::INSTR".to_string(),
-                    "*IDN?",
-                );
-                match quer_dev1 {
-                    Ok(res) => {
-                        println!("{}", res);
-                        assert_eq!(1, 1)
+                let devices = mapper.find_all_devices(Some("?*SOCKET"), true);
+                match devices {
+                    Ok(vec) => {
+                        if vec.len() < 2 {
+                            println!("not enough devices for this test!");
+                            assert_eq!(1, 0);
+                        }
+                        let dev1 = mapper.connect_device(vec[0].address.clone());
+                        match dev1 {
+                            Ok(_) => assert_eq!(1, 1),
+                            Err(_) => assert_eq!(1, -1),
+                        }
+                        let dev2 = mapper
+                            .connect_device(vec[1].address.clone());
+                        match dev2 {
+                            Ok(_) => assert_eq!(1, 1),
+                            Err(_) => assert_eq!(1, -2),
+                        }
+                        let quer_dev1 = mapper.query_from_device(
+                            vec[0].address.clone(),
+                            "*IDN?",
+                        );
+                        match quer_dev1 {
+                            Ok(res) => {
+                                println!("{}", res);
+                                assert_eq!(1, 1)
+                            }
+                            Err(e) => {
+                                println!("{}", e);
+                                assert_eq!(1, -3)
+                            }
+                        }
+                        let quer_dev2 = mapper.query_from_device(
+                            vec[1].address.clone(),
+                            "*IDN?",
+                        );
+                        match quer_dev2 {
+                            Ok(res) => {
+                                println!("{}", res);
+                                assert_eq!(1, 1)
+                            }
+                            Err(e) => {
+                                println!("{}", e);
+                                assert_eq!(1, -4)
+                            }
+                        }
                     }
-                    Err(e) => {
-                        println!("{}", e);
-                        assert_eq!(1, -3)
-                    }
-                }
-                let quer_dev2 = mapper.query_from_device(
-                    "USB0::0x0699::0x03C7::C023503::INSTR".to_string(),
-                    "*IDN?",
-                );
-                match quer_dev2 {
-                    Ok(res) => {
-                        println!("{}", res);
-                        assert_eq!(1, 1)
-                    }
-                    Err(e) => {
-                        println!("{}", e);
-                        assert_eq!(1, -4)
-                    }
+                    Err(_) => assert_eq!(1, 0),
                 }
             }
             Err(e) => {
