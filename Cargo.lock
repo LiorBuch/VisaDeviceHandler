@@ -181,7 +181,7 @@ dependencies = [
 
 [[package]]
 name = "visa-device-handler"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "dlopen",
  "mutex_logger",
