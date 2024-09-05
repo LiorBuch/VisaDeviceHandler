@@ -4,7 +4,7 @@ mod emulator_tests{
 
     #[test]
     fn test_connect() {
-        let mapper_res = SafeDeviceMap::init(None,None);
+        let mapper_res = SafeDeviceMap::default(None);
         match mapper_res {
             Ok(mapper) => {
                 let mut stat = mapper.connect_device("TCPIP0::10.0.0.21::5025::SOCKET".to_string());
@@ -26,7 +26,7 @@ mod emulator_tests{
     }
     #[test]
     fn test_map_call() {
-        let mapper_res = SafeDeviceMap::init(None,None);
+        let mapper_res = SafeDeviceMap::default(None);
         match mapper_res {
             Ok(mapper) => {
                 let stat = mapper.connect_device("TCPIP0::10.0.0.21::5026::SOCKET".to_string());

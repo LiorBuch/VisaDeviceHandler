@@ -12,7 +12,7 @@ use crate::{config::MapConfig, status_testers::{
 use crate::types::Device;
 use dlopen::wrapper::Container;
 use mutex_logger::logger::MLogger;
-use visa::{ViStatus, Wrapper, VI_SUCCESS};
+use visa::{ViFindList, ViStatus, Wrapper, VI_SUCCESS};
 /// The `SafeDeviceMap` provides a lock safe way to store The resource manager and all the sessions in one place.  
 /// SafeDeviceMap uses Arc and Mutex wrapped around rm and map to provide a safe way to interact with them.
 ///
@@ -59,11 +59,49 @@ impl SafeDeviceMap {
     ///It will generate a DefaultRM ,create a new HashMap and save the library instance.
     ///
     ///This Method **MUST** be called.
-    pub fn init(file_path: Option<&str>,config:Option<MapConfig>) -> Result<SafeDeviceMap, String> {
+    pub fn default(file_path: Option<&str>) -> Result<SafeDeviceMap, String> {
         let os = env::consts::OS;
         let visa: Container<Wrapper>;
         let logger = MLogger::init_default();
-        let map_config = config.unwrap_or(MapConfig::default());
+        let map_config = MapConfig::default();
+        match os {
+            "windows" => {
+                visa = visa::create(visa::Binary::NiVisa)
+                    .map_err(|_| "error opening windows library file!".to_string())?;
+            }
+            "linux" => {
+                visa = visa::create(visa::Binary::Custom(file_path.unwrap().to_string()))
+                    .map_err(|_| "error opening linux library file!".to_string())?;
+            }
+            "macos" => {
+                visa = visa::create(visa::Binary::Custom(file_path.unwrap().to_string()))
+                    .map_err(|_| "error opening macos library file!".to_string())?;
+            }
+            _ => {
+                unimplemented!("the os: {} is not supported!", os)
+            }
+        }
+        let mut rm_session = 0;
+        let status = visa.viOpenDefaultRM(&mut rm_session);
+        test_open_rm_status(status,&logger,map_config.panic_verbosity)?;
+        let safe = SafeDeviceMap {
+            lib: Arc::new(Mutex::new(visa)),
+            rm: Arc::new(Mutex::new(rm_session)),
+            map: Arc::new(Mutex::new(HashMap::new())),
+            logger: logger,
+            map_config: map_config
+        };
+        Ok(safe)
+    }
+        ///Call this to get the SafeDeviceMap.  
+    ///It will generate a DefaultRM ,create a new HashMap and save the library instance.
+    ///
+    ///This Method **MUST** be called.
+    pub fn init(file_path: Option<&str>,config_o:Option<MapConfig>,logger_o:Option<MLogger>) -> Result<SafeDeviceMap, String> {
+        let os = env::consts::OS;
+        let visa: Container<Wrapper>;
+        let map_config = config_o.unwrap_or(MapConfig::default());
+        let logger = logger_o.unwrap_or(MLogger::init_default());
         match os {
             "windows" => {
                 visa = visa::create(visa::Binary::NiVisa)
@@ -335,12 +373,13 @@ impl SafeDeviceMap {
         let mut ret_cnt = 0u32;
         let mut des = [0u8; 256];
         let mut device_session: u32 = 0;
+        let mut f_list:ViFindList = 0;
         let c_address = CString::new(filter.unwrap_or("USB?*"))
             .map_err(|_| "CString Adrees conversion error".to_string())?;
         let mut status = lib.viFindRsrc(
             rm.clone(),
             c_address.as_ptr(),
-            &mut device_session,
+            &mut f_list,
             &mut ret_cnt,
             des.as_mut_ptr() as *mut i8,
         );
@@ -389,7 +428,7 @@ impl SafeDeviceMap {
                 println!("<-----------------------> \n");
             }
             devices.push(device);
-            lib.viFindNext(device_session, des.as_mut_ptr() as *mut i8);
+            lib.viFindNext(f_list, des.as_mut_ptr() as *mut i8);
         }
         Ok(devices)
     }
