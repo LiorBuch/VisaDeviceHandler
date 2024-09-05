@@ -397,6 +397,7 @@ impl SafeDeviceMap {
             match err_code {
                 Ok(_) => {},
                 Err(_) => {
+                    lib.viFindNext(f_list, des.as_mut_ptr() as *mut i8);
                     continue;
                 },
             }
