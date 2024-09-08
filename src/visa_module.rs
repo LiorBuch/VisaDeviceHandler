@@ -429,6 +429,7 @@ impl SafeDeviceMap {
                 println!("<-----------------------> \n");
             }
             devices.push(device);
+            des = [0u8; 256];
             lib.viFindNext(f_list, des.as_mut_ptr() as *mut i8);
         }
         Ok(devices)
