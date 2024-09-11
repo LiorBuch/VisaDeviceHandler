@@ -63,3 +63,11 @@ Link to the project: https://github.com/bluehands/Open-SCPI-Protocol-Emulator/tr
 - Fixed the problem where unable to use devices mapped since key include [`\0`] chars and address not.
 - Validated usage of TCP deviecs and emulators.
 - Added the option to define if a program should terminate by the `Verbosity` of the error, as some error codes can be warnings. defaults to Error level.
+
+    ### Change Log 0.6.2
+
+    - Updated the logger to V1.0.0, adds better log format.
+    - Fixed the find all issue where it cant find more than one device without crashing.
+
+    ### Change Log 0.6.3
+    - Fixed the issue of buffer not cleaning when searching for devices.
