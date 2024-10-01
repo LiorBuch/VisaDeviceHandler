@@ -1,8 +1,5 @@
 use std::{
-    collections::HashMap,
-    env,
-    ffi::CString,
-    sync::{Arc, Mutex},
+    collections::HashMap, env, ffi::CString
 };
 
 use crate::{config::MapConfig, status_testers::{
@@ -13,8 +10,8 @@ use crate::types::Device;
 use dlopen::wrapper::Container;
 use mutex_logger::logger::MLogger;
 use visa::{ViFindList, ViStatus, Wrapper, VI_SUCCESS};
-/// The `SafeDeviceMap` provides a lock safe way to store The resource manager and all the sessions in one place.  
-/// SafeDeviceMap uses Arc and Mutex wrapped around rm and map to provide a safe way to interact with them.
+/// The `DeviceMap` provides a lock safe way to store The resource manager and all the sessions in one place.  
+/// DeviceMap uses Arc and Mutex wrapped around rm and map to provide a safe way to interact with them.
 ///
 /// # Params
 /// @lib -> The main visa library, its just to create all kind of calls.  
@@ -27,7 +24,7 @@ use visa::{ViFindList, ViStatus, Wrapper, VI_SUCCESS};
 ///
 /// # Examples
 /// ```
-/// let sdm_result:SafeDeviceMap = SafeDeviceMap::init(None);
+/// let sdm_result:DeviceMap = DeviceMap::init(None);
 /// match sdm_result {
 ///     Ok(mapper) => {
 ///         mapper.connect_device("address_01".to_string());
@@ -39,27 +36,25 @@ use visa::{ViFindList, ViStatus, Wrapper, VI_SUCCESS};
 /// }
 /// ```
 ///
-/// To get a SafeDeviceMap call [`SafeDeviceMap::init()`].
-pub struct SafeDeviceMap {
-    lib: Arc<Mutex<Container<Wrapper>>>,
-    rm: Arc<Mutex<u32>>,
-    pub map: Arc<Mutex<HashMap<String, Device>>>,
+/// To get a DeviceMap call [`DeviceMap::init()`].
+pub struct DeviceMap {
+    lib: Container<Wrapper>,
+    rm: u32,
+    pub map: HashMap<String, Device>,
     pub logger: MLogger,
     pub map_config:MapConfig,
 }
-impl Drop for SafeDeviceMap {
+impl Drop for DeviceMap {
     fn drop(&mut self) {
-        let lib = self.lib.lock().map_err(|e| e.to_string()).unwrap();
-        let rm = self.rm.lock().map_err(|e| e.to_string()).unwrap();
-        lib.viClose(rm.clone());
+        self.lib.viClose(self.rm.clone());
     }
 }
-impl SafeDeviceMap {
-    ///Call this to get the SafeDeviceMap.  
+impl DeviceMap {
+    ///Call this to get the DeviceMap.  
     ///It will generate a DefaultRM ,create a new HashMap and save the library instance.
     ///
     ///This Method **MUST** be called.
-    pub fn default(file_path: Option<&str>) -> Result<SafeDeviceMap, String> {
+    pub fn default(file_path: Option<&str>) -> Result<DeviceMap, String> {
         let os = env::consts::OS;
         let visa: Container<Wrapper>;
         let logger = MLogger::init_default();
@@ -84,20 +79,20 @@ impl SafeDeviceMap {
         let mut rm_session = 0;
         let status = visa.viOpenDefaultRM(&mut rm_session);
         test_open_rm_status(status,&logger,map_config.panic_verbosity)?;
-        let safe = SafeDeviceMap {
-            lib: Arc::new(Mutex::new(visa)),
-            rm: Arc::new(Mutex::new(rm_session)),
-            map: Arc::new(Mutex::new(HashMap::new())),
+        let safe = DeviceMap {
+            lib: visa,
+            rm: rm_session,
+            map: HashMap::new(),
             logger: logger,
             map_config: map_config
         };
         Ok(safe)
     }
-        ///Call this to get the SafeDeviceMap.  
+    ///Call this to get the DeviceMap.  
     ///It will generate a DefaultRM ,create a new HashMap and save the library instance.
     ///
     ///This Method **MUST** be called.
-    pub fn init(file_path: Option<&str>,config_o:Option<MapConfig>,logger_o:Option<MLogger>) -> Result<SafeDeviceMap, String> {
+    pub fn init(file_path: Option<&str>,config_o:Option<MapConfig>,logger_o:Option<MLogger>) -> Result<DeviceMap, String> {
         let os = env::consts::OS;
         let visa: Container<Wrapper>;
         let map_config = config_o.unwrap_or(MapConfig::default());
@@ -122,10 +117,10 @@ impl SafeDeviceMap {
         let mut rm_session = 0;
         let status = visa.viOpenDefaultRM(&mut rm_session);
         test_open_rm_status(status,&logger,map_config.panic_verbosity)?;
-        let safe = SafeDeviceMap {
-            lib: Arc::new(Mutex::new(visa)),
-            rm: Arc::new(Mutex::new(rm_session)),
-            map: Arc::new(Mutex::new(HashMap::new())),
+        let safe = DeviceMap {
+            lib: visa,
+            rm: rm_session,
+            map: HashMap::new(),
             logger: logger,
             map_config: map_config
         };
@@ -137,10 +132,7 @@ impl SafeDeviceMap {
     ///*Before a device is entered to the map it will open a connection too.*
     ///
     ///Returns -> error [`String`] if failed to insert or void if success.
-    pub fn connect_device(&self, address: String) -> Result<(), String> {
-        let lib = self.lib.lock().map_err(|e| e.to_string())?;
-        let rm = self.rm.lock().map_err(|e| e.to_string())?;
-        let mut map = self.map.lock().map_err(|e| e.to_string())?;
+    pub fn connect_device(&mut self, address: String) -> Result<(), String> {
 
         let cmd = b"*IDN?\n";
         let mut ret_cnt = 0u32;
@@ -148,23 +140,23 @@ impl SafeDeviceMap {
         let mut device_session: u32 = 0;
         let c_address = CString::new(address.trim_end_matches('\0').as_bytes())
             .map_err(|_| "CString Addrees conversion error".to_string())?;
-        let mut status = lib.viFindRsrc(
-            rm.clone(),
+        let mut status = self.lib.viFindRsrc(
+            self.rm.clone(),
             c_address.as_ptr(),
             &mut device_session,
             &mut ret_cnt,
             des.as_mut_ptr() as *mut i8,
         );
         test_find_rsc_status(status, &self.logger,self.map_config.panic_verbosity)?;
-        status = lib.viOpen(
-            rm.clone(),
+        status = self.lib.viOpen(
+            self.rm.clone(),
             des.as_ptr() as *mut i8,
             0,
             0,
             &mut device_session,
         );
         test_viopen_status(status, &self.logger,self.map_config.panic_verbosity)?;
-        status = lib.viWrite(
+        status = self.lib.viWrite(
             device_session,
             cmd.as_ptr(),
             u32::try_from(cmd.len()).map_err(|_| "u32 conversion error".to_string())?,
@@ -172,7 +164,7 @@ impl SafeDeviceMap {
         );
         test_write_status(status, &self.logger,self.map_config.panic_verbosity)?;
         let resp = vec![0u8; 50];
-        status = lib.viRead(device_session, resp.as_ptr() as *mut _, 50, &mut ret_cnt);
+        status = self.lib.viRead(device_session, resp.as_ptr() as *mut _, 50, &mut ret_cnt);
         test_read_status(status, &self.logger,self.map_config.panic_verbosity)?;
         let response = std::str::from_utf8(&resp[0..ret_cnt as usize])
             .map_err(|_| "Response parse error".to_string())?;
@@ -182,7 +174,7 @@ impl SafeDeviceMap {
             name: response.to_string(),
             session: device_session,
         };
-        map.insert(device.address.clone().trim().to_string(), device);
+        self.map.insert(device.address.clone().trim().to_string(), device);
         Ok(())
     }
     ///Call this to remove a device from the map.
@@ -191,15 +183,12 @@ impl SafeDeviceMap {
     ///@address -> Device address to get removed.
     ///
     ///Return -> The removed [`Device`] on success or error string on fail.
-    pub fn disconnect_device(&self, address: String) -> Result<Device, String> {
-        let lib = self.lib.lock().map_err(|e| e.to_string())?;
-        let mut map = self.map.lock().map_err(|e| e.to_string())?;
-
-        let remove_result = map.remove(&address);
+    pub fn disconnect_device(&mut self, address: String) -> Result<Device, String> {
+        let remove_result = self.map.remove(&address);
         match remove_result {
             Some(mut device) => {
                 let status: ViStatus;
-                status = lib.viClose(device.session);
+                status = self.lib.viClose(device.session);
                 if status as u32 == VI_SUCCESS {
                     device.session = 0;
                     Ok(device)
@@ -216,17 +205,15 @@ impl SafeDeviceMap {
     ///@msg -> The message to send, a concated [`str`] of function name and its args.
     ///
     ///Returns -> Void on success string if error.
-    pub fn write_to_device(&self, address: String, msg: &str) -> Result<(), String> {
-        let lib = self.lib.lock().map_err(|e| e.to_string())?;
-        let map = self.map.lock().map_err(|e| e.to_string())?;
+    pub fn write_to_device(&mut self, address: String, msg: &str) -> Result<(), String> {
 
-        let device_session_option = map.get(&address);
+        let device_session_option = self.map.get(&address);
         match device_session_option {
             Some(device) => {
                 let device_session = device.session;
                 let cmd: &[u8] = msg.as_bytes();
                 let mut ret_cnt = 0u32;
-                let status = lib.viWrite(
+                let status = self.lib.viWrite(
                     device_session,
                     cmd.as_ptr(),
                     u32::try_from(cmd.len()).map_err(|_| "u32 conversion error".to_string())?,
@@ -244,17 +231,15 @@ impl SafeDeviceMap {
     ///@address -> Device address you wish to read its buffer.
     ///
     ///Returns -> The read string if success error string if failed.
-    pub fn read_from_device(&self, address: String) -> Result<String, String> {
-        let lib = self.lib.lock().map_err(|e| e.to_string())?;
-        let map = self.map.lock().map_err(|e| e.to_string())?;
+    pub fn read_from_device(&mut self, address: String) -> Result<String, String> {
 
-        let device_session_option = map.get(&address);
+        let device_session_option = self.map.get(&address);
         match device_session_option {
             Some(device) => {
                 let device_session = device.session;
                 let mut ret_cnt = 0u32;
                 let resp = vec![0u8; 50];
-                let status = lib.viRead(device_session, resp.as_ptr() as *mut _, 50, &mut ret_cnt);
+                let status = self.lib.viRead(device_session, resp.as_ptr() as *mut _, 50, &mut ret_cnt);
                 test_read_status(status, &self.logger,self.map_config.panic_verbosity)?;
                 let response = std::str::from_utf8(&resp[0..ret_cnt as usize])
                     .map_err(|_| "error, cannot parse response")?;
@@ -271,16 +256,14 @@ impl SafeDeviceMap {
     ///@msg -> Message to send to the device (the write message).
     ///
     ///Returns -> The read string if success error string if failed.
-    pub fn query_from_device(&self, address: String, msg: &str) -> Result<String, String> {
-        let lib = self.lib.lock().map_err(|e| e.to_string())?;
-        let map = self.map.lock().map_err(|e| e.to_string())?;
-        let device_session_option = map.get(&address);
+    pub fn query_from_device(&mut self, address: String, msg: &str) -> Result<String, String> {
+        let device_session_option = self.map.get(&address);
         match device_session_option {
             Some(device) => {
                 let device_session = device.session;
                 let cmd: &[u8] = msg.as_bytes();
                 let mut ret_cnt = 0u32;
-                let mut status = lib.viWrite(
+                let mut status = self.lib.viWrite(
                     device_session,
                     cmd.as_ptr(),
                     u32::try_from(cmd.len()).map_err(|_| "u32 conversion error".to_string())?,
@@ -288,7 +271,7 @@ impl SafeDeviceMap {
                 );
                 test_write_status(status, &self.logger,self.map_config.panic_verbosity)?;
                 let resp = vec![0u8; 50];
-                status = lib.viRead(device_session, resp.as_ptr() as *mut _, 50, &mut ret_cnt);
+                status = self.lib.viRead(device_session, resp.as_ptr() as *mut _, 50, &mut ret_cnt);
                 test_read_status(status, &self.logger,self.map_config.panic_verbosity)?;
                 let response = std::str::from_utf8(&resp[0..ret_cnt as usize])
                     .map_err(|_| "error, cannot parse response")?;
@@ -303,9 +286,7 @@ impl SafeDeviceMap {
     ///@debug -> bool, if you wish to print the device info.
     ///
     ///Returns -> The first [`Device`].
-    pub fn get_first_device(&self, filter: Option<&str>, debug: bool) -> Result<Device, String> {
-        let lib = self.lib.lock().map_err(|e| e.to_string())?;
-        let rm = self.rm.lock().map_err(|e| e.to_string())?;
+    pub fn get_first_device(&mut self, filter: Option<&str>, debug: bool) -> Result<Device, String> {
 
         let cmd = b"*IDN?\n";
         let mut ret_cnt = 0u32;
@@ -313,23 +294,23 @@ impl SafeDeviceMap {
         let mut device_session: u32 = 0;
         let c_address = CString::new(filter.unwrap_or("USB?*"))
             .map_err(|_| "CString Addrees conversion error".to_string())?;
-        let mut status = lib.viFindRsrc(
-            rm.clone(),
+        let mut status = self.lib.viFindRsrc(
+            self.rm.clone(),
             c_address.as_ptr(),
             &mut device_session,
             &mut ret_cnt,
             des.as_mut_ptr() as *mut i8,
         );
         test_find_rsc_status(status, &self.logger,self.map_config.panic_verbosity)?;
-        status = lib.viOpen(
-            rm.clone(),
+        status = self.lib.viOpen(
+            self.rm.clone(),
             des.as_ptr() as *mut i8,
             0,
             0,
             &mut device_session,
         );
         test_viopen_status(status, &self.logger,self.map_config.panic_verbosity)?;
-        status = lib.viWrite(
+        status = self.lib.viWrite(
             device_session,
             cmd.as_ptr(),
             u32::try_from(cmd.len()).map_err(|_| "u32 conversion error".to_string())?,
@@ -337,7 +318,7 @@ impl SafeDeviceMap {
         );
         test_write_status(status, &self.logger,self.map_config.panic_verbosity)?;
         let resp = vec![0u8; 50];
-        status = lib.viRead(device_session, resp.as_ptr() as *mut _, 50, &mut ret_cnt);
+        status = self.lib.viRead(device_session, resp.as_ptr() as *mut _, 50, &mut ret_cnt);
         test_read_status(status, &self.logger,self.map_config.panic_verbosity)?;
         let response = std::str::from_utf8(&resp[0..ret_cnt as usize])
             .map_err(|_| "response parse error".to_string())?;
@@ -351,7 +332,7 @@ impl SafeDeviceMap {
             println!("device name: {}", device.name);
             println!("device address: {}", device.address);
             println!("device session: {}", device.session);
-            println!("rm session: {}", rm);
+            println!("rm session: {}", self.rm);
         }
         Ok(device)
     }
@@ -366,8 +347,8 @@ impl SafeDeviceMap {
         filter: Option<&str>,
         debug: bool,
     ) -> Result<Vec<Device>, String> {
-        let lib = self.lib.lock().map_err(|e| e.to_string())?;
-        let rm = self.rm.lock().map_err(|e| e.to_string())?;
+        let lib = &self.lib;
+        let rm = self.rm;
 
         let cmd = b"*IDN?\n";
         let mut ret_cnt = 0u32;
@@ -436,23 +417,21 @@ impl SafeDeviceMap {
     }
     ///This function clears the mapping of the devices.  
     ///It will close **all** the connections and **drop** all the Devices.
-    pub fn clear_map(&self) -> Result<(), String> {
-        let lib = self.lib.lock().map_err(|e| e.to_string())?;
-        let mut map = self.map.lock().map_err(|e| e.to_string())?;
-        for value in map.values() {
+    pub fn clear_map(&mut self) -> Result<(), String> {
+        let lib = &self.lib;
+        for value in self.map.values() {
             lib.viClear(value.session);
             lib.viClose(value.session);
         }
-        map.clear();
+        self.map.clear();
         Ok(())
     }
-    ///This function returns to the user all the active [`Device`] that the [`SafeDeviceMap`] have access to.
+    ///This function returns to the user all the active [`Device`] that the [`DeviceMap`] have access to.
     ///
     ///Returns -> A [`Vec`] of [`Device`] currently in use.
-    pub fn get_all_mapped_devices(&self) -> Result<Vec<Device>, String> {
-        let map = self.map.lock().map_err(|e| e.to_string())?;
+    pub fn get_all_mapped_devices(&mut self) -> Result<Vec<Device>, String> {
         let mut devices: Vec<Device> = Vec::new();
-        for value in map.values() {
+        for value in self.map.values() {
             let dev = Device {
                 address: value.address.to_string(),
                 name: value.name.to_string(),
