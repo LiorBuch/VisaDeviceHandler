@@ -13,8 +13,9 @@ use crate::types::Device;
 use dlopen::wrapper::Container;
 use mutex_logger::logger::MLogger;
 use visa::{ViFindList, ViStatus, Wrapper, VI_SUCCESS};
-/// The `MutexDeviceMap` provides a lock safe way to store The resource manager and all the sessions in one place.  
-/// MutexDeviceMap uses Arc and Mutex wrapped around rm and map to provide a safe way to interact with them.
+/// The `MutexDeviceMap` provides a locked safe way to store The resource manager and all the sessions in one place.  
+/// MutexDeviceMap uses Arc and Mutex wrapped around rm and map to provide a safe way to interact with them.   
+/// *For usage without mutex use `DeviceMap`*
 ///
 /// # Params
 /// @lib -> The main visa library, its just to create all kind of calls.  
