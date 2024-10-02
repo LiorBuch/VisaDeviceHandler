@@ -73,6 +73,6 @@ Link to the project: https://github.com/bluehands/Open-SCPI-Protocol-Emulator/tr
     ### Change Log 0.6.3
     - Fixed the issue of buffer not cleaning when searching for devices.
 
-### Change Log 1.0.0
+## Change Log 1.0.0
  - Changed SafeDeviceMap to MutexDeviceMap.
  - Added a non mutex variant of the map.
