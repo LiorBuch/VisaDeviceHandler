@@ -18,10 +18,10 @@ dlopen2 = "0.7.0"
 
 [features]
 
-default = ["core"]
+default = ["all"]
 
 core = []
 
-map = ["map"]
-mutex_map =["mutex_map"]
-all = ["map","mutex_map"]
+map = []
+mutex_map =[]
+all = ["mutex_map","map"]

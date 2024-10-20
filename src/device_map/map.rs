@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap, env, ffi::CString
+    collections::HashMap, env, ffi::CString, u32
 };
 
 use crate::{config::MapConfig, status_testers::{
@@ -48,7 +48,9 @@ pub struct DeviceMap {
 }
 impl Drop for DeviceMap {
     fn drop(&mut self) {
-        self.lib.viClose(self.rm.clone());
+        if self.rm != u32::MAX {
+            self.lib.viClose(self.rm.clone());
+        }
     }
 }
 impl DeviceMap {
@@ -208,7 +210,6 @@ impl DeviceMap {
     ///
     ///Returns -> Void on success string if error.
     pub fn write_to_device(&mut self, address: String, msg: &str) -> Result<(), String> {
-
         let device_session_option = self.map.get(&address);
         match device_session_option {
             Some(device) => {
@@ -234,7 +235,6 @@ impl DeviceMap {
     ///
     ///Returns -> The read string if success error string if failed.
     pub fn read_from_device(&mut self, address: String) -> Result<String, String> {
-
         let device_session_option = self.map.get(&address);
         match device_session_option {
             Some(device) => {
@@ -289,7 +289,6 @@ impl DeviceMap {
     ///
     ///Returns -> The first [`Device`].
     pub fn get_first_device(&mut self, filter: Option<&str>, debug: bool) -> Result<Device, String> {
-
         let cmd = b"*IDN?\n";
         let mut ret_cnt = 0u32;
         let mut des = [0u8; 256];
@@ -446,6 +445,22 @@ impl DeviceMap {
         Ok(devices)
     }
 
-    pub fn close_rm(&mut self){}
-    pub fn open_rm(&mut self){}
+    ///This function closes the maps active resource manager.
+    pub fn close_rm(&mut self){
+        self.lib.viClose(self.rm.clone());
+        self.rm = u32::MAX;
+    }
+    ///This function create a new resource manager for the map to use.
+    /// 
+    ///Returns -> [`u32`] the session of the new rm.
+    pub fn open_rm(&mut self)->Result<u32,String>{
+        if self.rm == u32::MAX{
+            let mut vi:u32 = 0;
+            self.lib.viOpenDefaultRM(&mut vi);
+            self.rm = vi.clone();
+            Ok(vi)
+        } else {
+            Err("rm is already opened!".to_string())
+        }
+    }
 }

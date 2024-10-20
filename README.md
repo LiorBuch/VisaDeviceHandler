@@ -7,7 +7,31 @@ The crate have mutex safe and non mutex safe mode.
 
 The crate supports Windows, and sould support Linux and MacOS. but is being tested mainly on Windows.
 
+## Features
+
+- **Core (`core`)**: The basic visa wrapper, simillar to the visa.h file.
+- **Map (`map`)**: Adds the functionality of `DeviceMap`.
+- **Mutex MAp (`mutex_map`)**: Adds the functionality of `MutexDeviceMap`.
+- **All Complicated (`all`)**: Enables all features.
+
 ## Example
+
+### Visa FFI
+
+```rust
+    let lib =
+    let device_session = device.session;
+    let cmd: &[u8] = "*IDN?\n".as_bytes();
+    let mut ret_cnt = 0u32;
+    let mut status = self.lib.viWrite(
+        device_session,
+        cmd.as_ptr(),
+        u32::try_from(cmd.len()).map_err(|_| "u32 conversion error".to_string())?,
+        &mut ret_cnt,
+    );
+```
+
+### Device Maps (Mutex and Non Mutex)
 
 ```rust
 
@@ -34,6 +58,7 @@ The next project creates an emulator of a visa device to be used with a TCP conn
 As the project is not mine, i cant help much with its usage.
 One issue i spotted is that read operations always timeout, probably a missing termination character.
 Link to the project: https://github.com/bluehands/Open-SCPI-Protocol-Emulator/tree/main
+ 
 
 ## Change Log 0.3.0
 
@@ -76,3 +101,9 @@ Link to the project: https://github.com/bluehands/Open-SCPI-Protocol-Emulator/tr
 ## Change Log 1.0.0
  - Changed SafeDeviceMap to MutexDeviceMap.
  - Added a non mutex variant of the map.
+
+## Change Log 1.1.0
+ - Each map is now a feature to save space.
+ - Crate now provide basic NI-VISA Library wrapper.
+ - Dependencies update.
+ - Each map can now close its RM and open a new one.
