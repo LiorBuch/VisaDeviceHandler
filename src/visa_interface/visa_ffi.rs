@@ -1,11 +1,10 @@
 #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
 #![allow(dead_code)]
-use dlopen::wrapper::WrapperApi;
-use dlopen_derive::WrapperApi;
+use dlopen2::wrapper::WrapperApi;
 
 #[derive(WrapperApi)]
-pub struct VisaFuncs {
+pub struct VisaFFI {
     viOpenDefaultRM: fn(vi: ViPSession) -> ViStatus,
     viFindRsrc: fn(
         sesn: ViSession,

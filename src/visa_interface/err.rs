@@ -5,7 +5,7 @@ use std::io::Error as IoError;
 
 ///This is a library-specific error that is returned by all calls to all APIs.
 #[derive(Debug)]
-pub enum Error {
+pub enum VisaWrapperError {
     ///The library could not be opened.
     OpeningLibraryError(IoError),
     ///The symbol could not be obtained.
@@ -20,9 +20,9 @@ pub enum Error {
     UnsupportedPlatform,
 }
 
-impl Display for Error {
+impl Display for VisaWrapperError {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        use self::Error::*;
+        use self::VisaWrapperError::*;
         f.write_str(&format!("{:?}", self))?;
         match self {
             OpeningLibraryError(msg) => {
@@ -44,21 +44,21 @@ impl Display for Error {
     }
 }
 
-impl From<dlopen::Error> for Error {
-    fn from(value: dlopen::Error) -> Self {
+impl From<dlopen2::Error> for VisaWrapperError {
+    fn from(value: dlopen2::Error) -> Self {
         match value {
-            dlopen::Error::NullCharacter(_) => Error::NullCharacter,
-            dlopen::Error::OpeningLibraryError(e) => Error::OpeningLibraryError(e),
-            dlopen::Error::SymbolGettingError(e) => Error::SymbolGettingError(e),
-            dlopen::Error::NullSymbol => Error::NullSymbol,
-            dlopen::Error::AddrNotMatchingDll(e) => Error::PathNotMatchingLibrary(e),
+            dlopen2::Error::NullCharacter(_) => VisaWrapperError::NullCharacter,
+            dlopen2::Error::OpeningLibraryError(e) => VisaWrapperError::OpeningLibraryError(e),
+            dlopen2::Error::SymbolGettingError(e) => VisaWrapperError::SymbolGettingError(e),
+            dlopen2::Error::NullSymbol => VisaWrapperError::NullSymbol,
+            dlopen2::Error::AddrNotMatchingDll(e) => VisaWrapperError::PathNotMatchingLibrary(e),
         }
     }
 }
 
-impl ErrorTrait for Error {
+impl ErrorTrait for VisaWrapperError {
     fn description(&self) -> &str {
-        use self::Error::*;
+        use self::VisaWrapperError::*;
         match *self {
             OpeningLibraryError(_) => "Could not open library",
             SymbolGettingError(_) => "Could not obtain symbol from the library",
@@ -70,7 +70,7 @@ impl ErrorTrait for Error {
     }
 
     fn cause(&self) -> Option<&dyn ErrorTrait> {
-        use self::Error::*;
+        use self::VisaWrapperError::*;
         match self {
             &OpeningLibraryError(_)
             | &SymbolGettingError(_)

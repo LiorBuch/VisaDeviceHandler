@@ -7,9 +7,11 @@ use crate::{config::MapConfig, status_testers::{
     test_write_status,
 }};
 use crate::types::Device;
-use dlopen::wrapper::Container;
+use dlopen2::wrapper::Container;
 use mutex_logger::logger::MLogger;
-use visa::{ViFindList, ViStatus, Wrapper, VI_SUCCESS};
+use crate::visa_interface::visa_ffi::{ViFindList, ViStatus, VisaFFI, VI_SUCCESS};
+use crate::visa_interface::object;
+
 /// The `DeviceMap` provides a resource manager for all the sessions in one place.  
 /// Unlike `MutexDeviceMap` DeviceMap does not provides a thread safe functionality.
 ///
@@ -38,7 +40,7 @@ use visa::{ViFindList, ViStatus, Wrapper, VI_SUCCESS};
 ///
 /// To get a DeviceMap call [`DeviceMap::init()`].
 pub struct DeviceMap {
-    lib: Container<Wrapper>,
+    lib: Container<VisaFFI>,
     rm: u32,
     pub map: HashMap<String, Device>,
     pub logger: MLogger,
@@ -56,20 +58,20 @@ impl DeviceMap {
     ///This Method **MUST** be called.
     pub fn default(file_path: Option<&str>) -> Result<DeviceMap, String> {
         let os = env::consts::OS;
-        let visa: Container<Wrapper>;
+        let visa: Container<VisaFFI>;
         let logger = MLogger::init_default();
         let map_config = MapConfig::default();
         match os {
             "windows" => {
-                visa = visa::create(visa::Binary::NiVisa)
+                visa = object::create(&object::Binary::NiVisa)
                     .map_err(|_| "error opening windows library file!".to_string())?;
             }
             "linux" => {
-                visa = visa::create(visa::Binary::Custom(file_path.unwrap().to_string()))
+                visa = object::create(&object::Binary::Custom(file_path.unwrap().to_string()))
                     .map_err(|_| "error opening linux library file!".to_string())?;
             }
             "macos" => {
-                visa = visa::create(visa::Binary::Custom(file_path.unwrap().to_string()))
+                visa = object::create(&object::Binary::Custom(file_path.unwrap().to_string()))
                     .map_err(|_| "error opening macos library file!".to_string())?;
             }
             _ => {
@@ -94,20 +96,20 @@ impl DeviceMap {
     ///This Method **MUST** be called.
     pub fn init(file_path: Option<&str>,config_o:Option<MapConfig>,logger_o:Option<MLogger>) -> Result<DeviceMap, String> {
         let os = env::consts::OS;
-        let visa: Container<Wrapper>;
+        let visa: Container<VisaFFI>;
         let map_config = config_o.unwrap_or(MapConfig::default());
         let logger = logger_o.unwrap_or(MLogger::init_default());
         match os {
             "windows" => {
-                visa = visa::create(visa::Binary::NiVisa)
+                visa = object::create(&object::Binary::NiVisa)
                     .map_err(|_| "error opening windows library file!".to_string())?;
             }
             "linux" => {
-                visa = visa::create(visa::Binary::Custom(file_path.unwrap().to_string()))
+                visa = object::create(&object::Binary::Custom(file_path.unwrap().to_string()))
                     .map_err(|_| "error opening linux library file!".to_string())?;
             }
             "macos" => {
-                visa = visa::create(visa::Binary::Custom(file_path.unwrap().to_string()))
+                visa = object::create(&object::Binary::Custom(file_path.unwrap().to_string()))
                     .map_err(|_| "error opening macos library file!".to_string())?;
             }
             _ => {
@@ -348,7 +350,8 @@ impl DeviceMap {
         debug: bool,
     ) -> Result<Vec<Device>, String> {
         let lib = &self.lib;
-        let rm = self.rm;
+        let mut rm = 0;
+        lib.viOpenDefaultRM(&mut rm);
 
         let cmd = b"*IDN?\n";
         let mut ret_cnt = 0u32;
@@ -413,6 +416,7 @@ impl DeviceMap {
             des = [0u8; 256];
             lib.viFindNext(f_list, des.as_mut_ptr() as *mut i8);
         }
+        lib.viClose(rm);
         Ok(devices)
     }
     ///This function clears the mapping of the devices.  
@@ -441,4 +445,7 @@ impl DeviceMap {
         }
         Ok(devices)
     }
+
+    pub fn close_rm(&mut self){}
+    pub fn open_rm(&mut self){}
 }

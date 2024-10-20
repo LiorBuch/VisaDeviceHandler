@@ -1,19 +1,27 @@
 [package]
 name = "visa-device-handler"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 license = "MIT"
 authors = ["LiorBuch"]
 description = "a crate to handle NI-VISA connections and simplify its use."
 repository = "https://github.com/LiorBuch/VisaDeviceHandler"
-license-file= "LICENSE.txt"
 readme = "README.md"
 keywords = ["dll","so","visa","ni-visa"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-visa = "=0.1.0"
-serde_json = "1.0.1"
-serde = { version = "1.0.202", features = ["derive"] }
-dlopen = "=0.1.8"
+serde_json = "1.0.132"
+serde = { version = "1.0.210", features = ["derive"] }
 mutex_logger = "1.0.0"
+dlopen2 = "0.7.0"
+
+[features]
+
+default = ["core"]
+
+core = []
+
+map = ["map"]
+mutex_map =["mutex_map"]
+all = ["map","mutex_map"]

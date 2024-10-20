@@ -10,9 +10,10 @@ use crate::{config::MapConfig, status_testers::{
     test_write_status,
 }};
 use crate::types::Device;
-use dlopen::wrapper::Container;
+use dlopen2::wrapper::Container;
 use mutex_logger::logger::MLogger;
-use visa::{ViFindList, ViStatus, Wrapper, VI_SUCCESS};
+use crate::visa_interface::visa_ffi::{ViFindList, ViStatus, VisaFFI, VI_SUCCESS};
+use crate::visa_interface::object;
 /// The `MutexDeviceMap` provides a locked safe way to store The resource manager and all the sessions in one place.  
 /// MutexDeviceMap uses Arc and Mutex wrapped around rm and map to provide a safe way to interact with them.   
 /// *For usage without mutex use `DeviceMap`*
@@ -42,7 +43,7 @@ use visa::{ViFindList, ViStatus, Wrapper, VI_SUCCESS};
 ///
 /// To get a MutexDeviceMap call [`MutexDeviceMap::init()`].
 pub struct MutexDeviceMap {
-    lib: Arc<Mutex<Container<Wrapper>>>,
+    lib: Arc<Mutex<Container<VisaFFI>>>,
     rm: Arc<Mutex<u32>>,
     pub map: Arc<Mutex<HashMap<String, Device>>>,
     pub logger: MLogger,
@@ -62,20 +63,20 @@ impl MutexDeviceMap {
     ///This Method **MUST** be called.
     pub fn default(file_path: Option<&str>) -> Result<MutexDeviceMap, String> {
         let os = env::consts::OS;
-        let visa: Container<Wrapper>;
+        let visa: Container<VisaFFI>;
         let logger = MLogger::init_default();
         let map_config = MapConfig::default();
         match os {
             "windows" => {
-                visa = visa::create(visa::Binary::NiVisa)
+                visa = object::create(&object::Binary::NiVisa)
                     .map_err(|_| "error opening windows library file!".to_string())?;
             }
             "linux" => {
-                visa = visa::create(visa::Binary::Custom(file_path.unwrap().to_string()))
+                visa = object::create(&object::Binary::Custom(file_path.unwrap().to_string()))
                     .map_err(|_| "error opening linux library file!".to_string())?;
             }
             "macos" => {
-                visa = visa::create(visa::Binary::Custom(file_path.unwrap().to_string()))
+                visa = object::create(&object::Binary::Custom(file_path.unwrap().to_string()))
                     .map_err(|_| "error opening macos library file!".to_string())?;
             }
             _ => {
@@ -100,20 +101,20 @@ impl MutexDeviceMap {
     ///This Method **MUST** be called.
     pub fn init(file_path: Option<&str>,config_o:Option<MapConfig>,logger_o:Option<MLogger>) -> Result<MutexDeviceMap, String> {
         let os = env::consts::OS;
-        let visa: Container<Wrapper>;
+        let visa: Container<VisaFFI>;
         let map_config = config_o.unwrap_or(MapConfig::default());
         let logger = logger_o.unwrap_or(MLogger::init_default());
         match os {
             "windows" => {
-                visa = visa::create(visa::Binary::NiVisa)
+                visa = object::create(&object::Binary::NiVisa)
                     .map_err(|_| "error opening windows library file!".to_string())?;
             }
             "linux" => {
-                visa = visa::create(visa::Binary::Custom(file_path.unwrap().to_string()))
+                visa = object::create(&object::Binary::Custom(file_path.unwrap().to_string()))
                     .map_err(|_| "error opening linux library file!".to_string())?;
             }
             "macos" => {
-                visa = visa::create(visa::Binary::Custom(file_path.unwrap().to_string()))
+                visa = object::create(&object::Binary::Custom(file_path.unwrap().to_string()))
                     .map_err(|_| "error opening macos library file!".to_string())?;
             }
             _ => {
@@ -368,7 +369,8 @@ impl MutexDeviceMap {
         debug: bool,
     ) -> Result<Vec<Device>, String> {
         let lib = self.lib.lock().map_err(|e| e.to_string())?;
-        let rm = self.rm.lock().map_err(|e| e.to_string())?;
+        let mut rm = 0;
+        lib.viOpenDefaultRM(&mut rm);
 
         let cmd = b"*IDN?\n";
         let mut ret_cnt = 0u32;
@@ -433,6 +435,7 @@ impl MutexDeviceMap {
             des = [0u8; 256];
             lib.viFindNext(f_list, des.as_mut_ptr() as *mut i8);
         }
+        lib.viClose(rm);
         Ok(devices)
     }
     ///This function clears the mapping of the devices.  
