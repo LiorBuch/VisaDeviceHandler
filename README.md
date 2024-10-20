@@ -2,7 +2,8 @@ Visa Device Handler
 ======
 
 Based on the visa crate, this crate aims to provide a wrapper to allow multiple device connections and handling,
-and make the usage of NI-VISA easier to use.
+and make the usage of NI-VISA easier to use.   
+The crate have mutex safe and non mutex safe mode.
 
 The crate supports Windows, and sould support Linux and MacOS. but is being tested mainly on Windows.
 
@@ -71,3 +72,7 @@ Link to the project: https://github.com/bluehands/Open-SCPI-Protocol-Emulator/tr
 
     ### Change Log 0.6.3
     - Fixed the issue of buffer not cleaning when searching for devices.
+
+## Change Log 1.0.0
+ - Changed SafeDeviceMap to MutexDeviceMap.
+ - Added a non mutex variant of the map.

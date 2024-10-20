@@ -13,8 +13,9 @@ use crate::types::Device;
 use dlopen::wrapper::Container;
 use mutex_logger::logger::MLogger;
 use visa::{ViFindList, ViStatus, Wrapper, VI_SUCCESS};
-/// The `SafeDeviceMap` provides a lock safe way to store The resource manager and all the sessions in one place.  
-/// SafeDeviceMap uses Arc and Mutex wrapped around rm and map to provide a safe way to interact with them.
+/// The `MutexDeviceMap` provides a locked safe way to store The resource manager and all the sessions in one place.  
+/// MutexDeviceMap uses Arc and Mutex wrapped around rm and map to provide a safe way to interact with them.   
+/// *For usage without mutex use `DeviceMap`*
 ///
 /// # Params
 /// @lib -> The main visa library, its just to create all kind of calls.  
@@ -27,7 +28,7 @@ use visa::{ViFindList, ViStatus, Wrapper, VI_SUCCESS};
 ///
 /// # Examples
 /// ```
-/// let sdm_result:SafeDeviceMap = SafeDeviceMap::init(None);
+/// let sdm_result:MutexDeviceMap = MutexDeviceMap::init(None);
 /// match sdm_result {
 ///     Ok(mapper) => {
 ///         mapper.connect_device("address_01".to_string());
@@ -39,27 +40,27 @@ use visa::{ViFindList, ViStatus, Wrapper, VI_SUCCESS};
 /// }
 /// ```
 ///
-/// To get a SafeDeviceMap call [`SafeDeviceMap::init()`].
-pub struct SafeDeviceMap {
+/// To get a MutexDeviceMap call [`MutexDeviceMap::init()`].
+pub struct MutexDeviceMap {
     lib: Arc<Mutex<Container<Wrapper>>>,
     rm: Arc<Mutex<u32>>,
     pub map: Arc<Mutex<HashMap<String, Device>>>,
     pub logger: MLogger,
     pub map_config:MapConfig,
 }
-impl Drop for SafeDeviceMap {
+impl Drop for MutexDeviceMap {
     fn drop(&mut self) {
         let lib = self.lib.lock().map_err(|e| e.to_string()).unwrap();
         let rm = self.rm.lock().map_err(|e| e.to_string()).unwrap();
         lib.viClose(rm.clone());
     }
 }
-impl SafeDeviceMap {
-    ///Call this to get the SafeDeviceMap.  
+impl MutexDeviceMap {
+    ///Call this to get the MutexDeviceMap.  
     ///It will generate a DefaultRM ,create a new HashMap and save the library instance.
     ///
     ///This Method **MUST** be called.
-    pub fn default(file_path: Option<&str>) -> Result<SafeDeviceMap, String> {
+    pub fn default(file_path: Option<&str>) -> Result<MutexDeviceMap, String> {
         let os = env::consts::OS;
         let visa: Container<Wrapper>;
         let logger = MLogger::init_default();
@@ -84,7 +85,7 @@ impl SafeDeviceMap {
         let mut rm_session = 0;
         let status = visa.viOpenDefaultRM(&mut rm_session);
         test_open_rm_status(status,&logger,map_config.panic_verbosity)?;
-        let safe = SafeDeviceMap {
+        let safe = MutexDeviceMap {
             lib: Arc::new(Mutex::new(visa)),
             rm: Arc::new(Mutex::new(rm_session)),
             map: Arc::new(Mutex::new(HashMap::new())),
@@ -93,11 +94,11 @@ impl SafeDeviceMap {
         };
         Ok(safe)
     }
-        ///Call this to get the SafeDeviceMap.  
+        ///Call this to get the MutexDeviceMap.  
     ///It will generate a DefaultRM ,create a new HashMap and save the library instance.
     ///
     ///This Method **MUST** be called.
-    pub fn init(file_path: Option<&str>,config_o:Option<MapConfig>,logger_o:Option<MLogger>) -> Result<SafeDeviceMap, String> {
+    pub fn init(file_path: Option<&str>,config_o:Option<MapConfig>,logger_o:Option<MLogger>) -> Result<MutexDeviceMap, String> {
         let os = env::consts::OS;
         let visa: Container<Wrapper>;
         let map_config = config_o.unwrap_or(MapConfig::default());
@@ -122,7 +123,7 @@ impl SafeDeviceMap {
         let mut rm_session = 0;
         let status = visa.viOpenDefaultRM(&mut rm_session);
         test_open_rm_status(status,&logger,map_config.panic_verbosity)?;
-        let safe = SafeDeviceMap {
+        let safe = MutexDeviceMap {
             lib: Arc::new(Mutex::new(visa)),
             rm: Arc::new(Mutex::new(rm_session)),
             map: Arc::new(Mutex::new(HashMap::new())),
@@ -446,7 +447,7 @@ impl SafeDeviceMap {
         map.clear();
         Ok(())
     }
-    ///This function returns to the user all the active [`Device`] that the [`SafeDeviceMap`] have access to.
+    ///This function returns to the user all the active [`Device`] that the [`MutexDeviceMap`] have access to.
     ///
     ///Returns -> A [`Vec`] of [`Device`] currently in use.
     pub fn get_all_mapped_devices(&self) -> Result<Vec<Device>, String> {

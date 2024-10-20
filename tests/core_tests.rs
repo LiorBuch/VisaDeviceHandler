@@ -1,10 +1,10 @@
 #[cfg(test)]
 mod core_tests {
-    use visa_device_handler::visa_module::SafeDeviceMap;
+    use visa_device_handler::device_map::mutex_map::MutexDeviceMap;
 
-    ///General test to see if the SafeDeviceMap works.
-    fn test_mapper() {
-        let mapper_res = SafeDeviceMap::default(None);
+    ///General test to see if the MutexDeviceMap works.
+    fn _test_mapper() {
+        let mapper_res = MutexDeviceMap::default(None);
         match mapper_res {
             Ok(mapper) => {
                 let stat = mapper.get_first_device(Some("?*INSTR"), true);
@@ -45,7 +45,7 @@ mod core_tests {
     }
     #[test]
     fn test_find_all() {
-        let mapper_res = SafeDeviceMap::default(None);
+        let mapper_res = MutexDeviceMap::default(None);
         match mapper_res {
             Ok(mapper) => {
                 let stat = mapper.find_all_devices(Some("USB?*"), true);
@@ -62,7 +62,7 @@ mod core_tests {
     }
     #[test]
     fn test_map_multi_device() {
-        let mapper_res = SafeDeviceMap::default(None);
+        let mapper_res = MutexDeviceMap::default(None);
         match mapper_res {
             Ok(mapper) => {
                 let devices = mapper.find_all_devices(Some("?*SOCKET"), true);

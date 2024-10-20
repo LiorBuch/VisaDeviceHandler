@@ -1,6 +1,6 @@
 pub mod find_first;
 mod status_testers;
 pub mod types;
-pub mod visa_module;
+pub mod device_map;
 pub mod config;
 mod visa_interface;
