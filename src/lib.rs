@@ -3,3 +3,4 @@ mod status_testers;
 pub mod types;
 pub mod visa_module;
 pub mod config;
+mod visa_interface;
