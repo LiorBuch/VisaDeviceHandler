@@ -75,6 +75,6 @@ impl ToString for Binary {
 /// .or_else(|_| visa::create(&visa::Binary::Primary))
 /// .or_else(|_| visa::create(&visa::Binary::Custom("visa.so".into())));
 ///```
-pub fn create(bin: &Binary) -> Result<Container<VisaFFI>, VisaWrapperError> {
+pub fn make(bin: &Binary) -> Result<Container<VisaFFI>, VisaWrapperError> {
     unsafe { Container::load(bin.binary_name()?.as_ref()).map_err(|e| VisaWrapperError::from(e)) }
 }

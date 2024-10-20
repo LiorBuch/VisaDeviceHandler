@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod interface_tests {
-    use visa_device_handler::visa_interface::object;
+    use visa_device_handler::visa_interface;
 
 
     #[test]
     fn test_interface() {
-        let lib = visa_device_handler::visa_interface::object::create(&object::Binary::NiVisa).unwrap();
+        let lib = visa_device_handler::visa_interface::make(&visa_interface::Binary::NiVisa).unwrap();
         let mut rm: u32 = 0;
         let mut _stat = lib.viOpenDefaultRM(&mut rm);
         let mut new_session: u32 = 0;

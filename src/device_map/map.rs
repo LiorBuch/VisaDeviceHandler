@@ -9,8 +9,8 @@ use crate::{config::MapConfig, status_testers::{
 use crate::types::Device;
 use dlopen2::wrapper::Container;
 use mutex_logger::logger::MLogger;
-use crate::visa_interface::visa_ffi::{ViFindList, ViStatus, VisaFFI, VI_SUCCESS};
-use crate::visa_interface::object;
+use crate::visa_interface::{ViFindList, ViStatus, VisaFFI, VI_SUCCESS};
+use crate::visa_interface;
 
 /// The `DeviceMap` provides a resource manager for all the sessions in one place.  
 /// Unlike `MutexDeviceMap` DeviceMap does not provides a thread safe functionality.
@@ -65,15 +65,15 @@ impl DeviceMap {
         let map_config = MapConfig::default();
         match os {
             "windows" => {
-                visa = object::create(&object::Binary::NiVisa)
+                visa = visa_interface::make(&visa_interface::Binary::NiVisa)
                     .map_err(|_| "error opening windows library file!".to_string())?;
             }
             "linux" => {
-                visa = object::create(&object::Binary::Custom(file_path.unwrap().to_string()))
+                visa = visa_interface::make(&visa_interface::Binary::Custom(file_path.unwrap().to_string()))
                     .map_err(|_| "error opening linux library file!".to_string())?;
             }
             "macos" => {
-                visa = object::create(&object::Binary::Custom(file_path.unwrap().to_string()))
+                visa = visa_interface::make(&visa_interface::Binary::Custom(file_path.unwrap().to_string()))
                     .map_err(|_| "error opening macos library file!".to_string())?;
             }
             _ => {
@@ -103,15 +103,15 @@ impl DeviceMap {
         let logger = logger_o.unwrap_or(MLogger::init_default());
         match os {
             "windows" => {
-                visa = object::create(&object::Binary::NiVisa)
+                visa = visa_interface::make(&visa_interface::Binary::NiVisa)
                     .map_err(|_| "error opening windows library file!".to_string())?;
             }
             "linux" => {
-                visa = object::create(&object::Binary::Custom(file_path.unwrap().to_string()))
+                visa = visa_interface::make(&visa_interface::Binary::Custom(file_path.unwrap().to_string()))
                     .map_err(|_| "error opening linux library file!".to_string())?;
             }
             "macos" => {
-                visa = object::create(&object::Binary::Custom(file_path.unwrap().to_string()))
+                visa = visa_interface::make(&visa_interface::Binary::Custom(file_path.unwrap().to_string()))
                     .map_err(|_| "error opening macos library file!".to_string())?;
             }
             _ => {
