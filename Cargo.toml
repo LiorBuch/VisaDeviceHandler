@@ -18,7 +18,7 @@ dlopen2 = "0.7.0"
 
 [features]
 
-default = ["all"]
+default = ["core"]
 
 core = []
 

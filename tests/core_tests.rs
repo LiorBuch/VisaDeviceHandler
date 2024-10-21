@@ -1,4 +1,5 @@
 #[cfg(test)]
+#[cfg(all(feature = "mutex_map" , feature = "map"))]
 mod core_tests {
     use visa_device_handler::device_map::mutex_map::MutexDeviceMap;
 
